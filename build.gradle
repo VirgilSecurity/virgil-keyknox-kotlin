@@ -1,0 +1,63 @@
+buildscript {
+    ext.versions = [
+            virgil_sdk: '5.0.4-SNAPSHOT',
+            kotlin: '1.2.31',
+            junit: '5.2.0'
+    ]
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+group 'com.virgilsecurity'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'kotlin'
+apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'maven'
+
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    // Virgil
+    compile "com.virgilsecurity.sdk:crypto:${versions.virgil_sdk}"
+//    compile "com.virgilsecurity.sdk:crypto-android:${versions.virgil_sdk}@aar"
+    compile "com.virgilsecurity.sdk:sdk:${versions.virgil_sdk}"
+
+    // https://mvnrepository.com/artifact/com.beust/klaxon
+    compile group: 'com.beust', name: 'klaxon', version: '3.0.5'
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}"
+
+    testCompile "org.junit.jupiter:junit-jupiter-api:${versions.junit}"
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+junitPlatformTest {
+    systemProperty 'APP_ID', System.getProperty('APP_ID')
+    systemProperty 'API_PRIVATE_KEY', System.getProperty('API_PRIVATE_KEY')
+    systemProperty 'API_PUBLIC_KEY', System.getProperty('API_PUBLIC_KEY')
+    systemProperty 'API_PUBLIC_KEY_ID', System.getProperty('API_PUBLIC_KEY_ID')
+}

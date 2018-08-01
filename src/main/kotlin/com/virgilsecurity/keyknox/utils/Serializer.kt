@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2015-2018, Virgil Security, Inc.
+ *
+ * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     (1) Redistributions of source code must retain the above copyright notice, this
+ *     list of conditions and the following disclaimer.
+ *
+ *     (2) Redistributions in binary form must reproduce the above copyright notice,
+ *     this list of conditions and the following disclaimer in the documentation
+ *     and/or other materials provided with the distribution.
+ *
+ *     (3) Neither the name of virgil nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package com.virgilsecurity.keyknox.utils
+
+import com.beust.klaxon.Converter
+import com.beust.klaxon.JsonValue
+import com.beust.klaxon.Klaxon
+import java.util.*
+
+interface Serializer {
+
+    companion object {
+
+        val klaxon: Klaxon by lazy {
+            val dateConverter = object: Converter {
+                override fun canConvert(cls: Class<*>) : Boolean {
+                    return cls == Date::class.java
+                }
+
+                override fun fromJson(jv: JsonValue) : Date {
+                    val value = jv.longValue
+                    return if (value != null) {
+                        Date(value)
+                    } else {
+                        Date()
+                    }
+                }
+
+                override fun toJson(value: Any) : String {
+                    val date = value as Date
+                    return date.time.toString()
+                }
+            }
+            val byteArrayConverter = object: Converter {
+                override fun canConvert(cls: Class<*>) : Boolean {
+                    return cls == ByteArray::class.java
+                }
+
+                override fun fromJson(jv: JsonValue) : ByteArray {
+                    val value = jv.string
+                    return if (value != null) {
+                        base64Decode(value)
+                    } else {
+                        byteArrayOf()
+                    }
+                }
+
+                override fun toJson(value: Any) : String {
+                    val array = value as ByteArray
+                    val base64Encoded = base64Encode(array)
+                    return "\"$base64Encoded\""
+                }
+            }
+
+            val klaxon = Klaxon().converter(byteArrayConverter).converter(dateConverter)
+                    .fieldConverter(Base64EncodedArray::class, byteArrayConverter)
+                    .fieldConverter(DateAsTimestamp::class, dateConverter)
+            klaxon
+        }
+
+    }
+}
+
+@Target(AnnotationTarget.FIELD)
+annotation class Base64EncodedArray
+
+@Target(AnnotationTarget.FIELD)
+annotation class DateAsTimestamp
