@@ -71,7 +71,7 @@ class KeyknoxClientTest {
 
     @Test
     fun pushValue() {
-        // KTC1
+        // KTC-1
         val data = base64Encode(UUID.randomUUID().toString())
         val privateKeyData = this.virgilCrypto.exportPrivateKey(this.privateKey)
         val publicKeyData =this.virgilCrypto.exportPublicKey(this.publicKey)
@@ -105,7 +105,7 @@ class KeyknoxClientTest {
 
     @Test
     fun pushValue_updateData() {
-        // KTC2
+        // KTC-2
         val data = base64Encode(UUID.randomUUID().toString())
         val data2 = base64Encode(UUID.randomUUID().toString())
         val privateKeyData = this.virgilCrypto.exportPrivateKey(this.privateKey)
@@ -147,7 +147,7 @@ class KeyknoxClientTest {
 
     @Test
     fun pullValue_empty() {
-        // KTC3
+        // KTC-3
         val pulledValue = this.keyknoxClient.pullValue(this.tokenStr)
         assertNotNull(pulledValue.value)
         assertTrue(pulledValue.value!!.isEmpty())
@@ -158,7 +158,7 @@ class KeyknoxClientTest {
 
     @Test
     fun resetValue() {
-        // KTC4
+        // KTC-4
         val data = base64Encode(UUID.randomUUID().toString())
         val meta = base64Encode(UUID.randomUUID().toString())
         val pushedValue = this.keyknoxClient.pushValue(meta, data, null, this.tokenStr)
@@ -174,7 +174,7 @@ class KeyknoxClientTest {
 
     @Test
     fun resetValue_empty() {
-        // KTC5
+        // KTC-5
         val resetValue = this.keyknoxClient.resetValue(this.tokenStr)
         assertNotNull(resetValue.value)
         assertTrue(resetValue.value!!.isEmpty())

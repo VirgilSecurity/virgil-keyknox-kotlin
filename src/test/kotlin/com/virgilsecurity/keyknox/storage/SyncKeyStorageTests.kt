@@ -94,7 +94,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun sync() {
-        // KTC29
+        // KTC-29
         this.syncKeyStorage.sync()
         assertTrue(this.keychainStorageWrapper.retrieveAll().isEmpty())
 
@@ -171,7 +171,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun storeEntry() {
-        // KTC30
+        // KTC-30
         val name = UUID.randomUUID().toString()
         val data = ConvertionUtils.toBytes(UUID.randomUUID().toString())
 
@@ -201,7 +201,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun deleteEntry() {
-        // KTC31
+        // KTC-31
         val name1 = UUID.randomUUID().toString()
         val data1 = ConvertionUtils.toBytes(UUID.randomUUID().toString())
         val name2 = UUID.randomUUID().toString()
@@ -230,7 +230,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun updateEntry() {
-        // KTC32
+        // KTC-32
         val name = UUID.randomUUID().toString()
         val data1 = ConvertionUtils.toBytes(UUID.randomUUID().toString())
         val data2 = ConvertionUtils.toBytes(UUID.randomUUID().toString())
@@ -259,7 +259,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun updateRecipients() {
-        // KTC33
+        // KTC-33
         val name = UUID.randomUUID().toString()
         val data = ConvertionUtils.toBytes(UUID.randomUUID().toString())
 
@@ -291,7 +291,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun storeEntries() {
-        // KTC34
+        // KTC-34
         val name1 = UUID.randomUUID().toString()
         val data1 = ConvertionUtils.toBytes(UUID.randomUUID().toString())
         val name2 = UUID.randomUUID().toString()
@@ -326,7 +326,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun deleteEntries() {
-        // KTC35
+        // KTC-35
         val name1 = UUID.randomUUID().toString()
         val data1 = ConvertionUtils.toBytes(UUID.randomUUID().toString())
         val name2 = UUID.randomUUID().toString()
@@ -362,7 +362,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun retrieveAll() {
-        // KTC36
+        // KTC-36
         val name1 = UUID.randomUUID().toString()
         val data1 = ConvertionUtils.toBytes(UUID.randomUUID().toString())
         val name2 = UUID.randomUUID().toString()
@@ -397,7 +397,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun deleteAll() {
-        // KTC37
+        // KTC-37
         val name1 = UUID.randomUUID().toString()
         val data1 = ConvertionUtils.toBytes(UUID.randomUUID().toString())
         val name2 = UUID.randomUUID().toString()
@@ -415,7 +415,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun deleteAll_empty() {
-        // KTC38
+        // KTC-38
         this.syncKeyStorage.sync()
         this.syncKeyStorage.deleteAll()
         assertTrue(this.cloudKeyStorage.retrieveAll().isEmpty())
@@ -425,7 +425,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun exists() {
-        // KTC39
+        // KTC-39
         val name1 = UUID.randomUUID().toString()
         val name2 = UUID.randomUUID().toString()
         val data = ConvertionUtils.toBytes(UUID.randomUUID().toString())
@@ -439,7 +439,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun outOfSync() {
-        // KTC40
+        // KTC-40
         val name = UUID.randomUUID().toString()
         val data = ConvertionUtils.toBytes(UUID.randomUUID().toString())
 

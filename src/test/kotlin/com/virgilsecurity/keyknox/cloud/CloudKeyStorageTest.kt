@@ -33,6 +33,8 @@
 
 package com.virgilsecurity.keyknox.cloud
 
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
 import com.virgilsecurity.keyknox.KeyknoxManager
 import com.virgilsecurity.keyknox.TestConfig
 import com.virgilsecurity.keyknox.client.KeyknoxClient
@@ -41,12 +43,18 @@ import com.virgilsecurity.keyknox.crypto.KeyknoxCryptoProtocol
 import com.virgilsecurity.keyknox.exception.CloudKeyStorageException
 import com.virgilsecurity.keyknox.exception.CloudStorageOutOfSyncException
 import com.virgilsecurity.keyknox.exception.EntryNotFoundException
+import com.virgilsecurity.keyknox.model.CloudEntries
+import com.virgilsecurity.keyknox.model.CloudEntry
+import com.virgilsecurity.keyknox.utils.Serializer
+import com.virgilsecurity.keyknox.utils.base64Decode
+import com.virgilsecurity.keyknox.utils.base64Encode
 import com.virgilsecurity.sdk.common.TimeSpan
 import com.virgilsecurity.sdk.crypto.*
 import com.virgilsecurity.sdk.jwt.JwtGenerator
 import com.virgilsecurity.sdk.jwt.accessProviders.CachingJwtProvider
 import com.virgilsecurity.sdk.storage.JsonKeyEntry
 import com.virgilsecurity.sdk.storage.KeyEntry
+import com.virgilsecurity.sdk.utils.ConvertionUtils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -89,7 +97,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun retrieveCloudEntries_empty() {
-        //KTC19
+        // KTC-19
         this.keyStorage.retrieveCloudEntries()
         val entries = this.keyStorage.retrieveAll()
         assertTrue(entries.isEmpty())
@@ -97,7 +105,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun storeEntry() {
-        //KTC20
+        // KTC-20
         val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
         val privateKeyData = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
         val name = "test"
@@ -121,7 +129,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun storeEntry_twoTimes() {
-        //KTC20
+        // KTC-20
         val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
         val privateKeyData = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
         val name = "test"
@@ -155,7 +163,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun existsEntry() {
-        //KTC21
+        // KTC-21
         val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
         val privateKeyData = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
         val name = "test"
@@ -179,7 +187,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun storeEntries() {
-        //KTC22
+        // KTC-22
         val numberOfKeys = 100
         val privateKeys = mutableListOf<VirgilPrivateKey>()
         val keyEntries = mutableListOf<KeyEntry>()
@@ -294,7 +302,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun deleteAllEntries() {
-        // KTC23
+        // KTC-23
         val numberOfKeys = 100
         val keyEntries = mutableListOf<KeyEntry>()
 
@@ -331,7 +339,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun deleteAllEntries_empty() {
-        // KTC24
+        // KTC-24
 
         // Delete all entries
         this.keyStorage.deleteAll()
@@ -348,7 +356,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun deleteEntries() {
-        //KTC25
+        // KTC-25
         val numberOfKeys = 10
         val keyEntries = mutableListOf<KeyEntry>()
 
@@ -412,7 +420,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun updateEntry() {
-        //KTC26
+        // KTC-26
         val numberOfKeys = 10
         val keyEntries = mutableListOf<KeyEntry>()
 
@@ -456,7 +464,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun updateRecipient() {
-        //KTC27
+        // KTC-27
         val numberOfKeys = 10
         val keyEntries = mutableListOf<KeyEntry>()
 
@@ -486,7 +494,7 @@ class CloudKeyStorageTest {
 
     @Test
     fun outOfSync() {
-        //KTC28
+        // KTC-28
         try {
             this.keyStorage.retrieveAll()
             fail<String>("Storage should be out of sync")
@@ -561,6 +569,81 @@ class CloudKeyStorageTest {
         } catch (e: CloudKeyStorageException) {
             assertTrue(e is CloudStorageOutOfSyncException)
         }
+    }
+
+    @Test
+    fun serializeEntries() {
+        // KTC-17
+        val cloudJson = Parser().parse(StringBuilder(CloudKeyStorageTest::class.java.getResource("/cloud.json").readText())) as JsonObject
+        val cloudKeyStorage = this.keyStorage as CloudKeyStorage
+
+        // Create dictionary dict1 of CloudEntry instances using data in Cloud.json file
+        val entriesArray = mutableListOf<CloudEntry>()
+        val map = mutableMapOf<String, String>()
+        cloudJson.obj("kMeta1")?.forEach { key, value ->
+            map[key] = value as String
+        }
+        entriesArray.add(CloudEntry(cloudJson.string("kName1")!!,
+                base64Decode(cloudJson.string("kData1")!!),
+                Date(cloudJson.long("kCreationDate1")!!),
+                Date(cloudJson.long("kModificationDate1")!!),
+                map))
+        entriesArray.add(CloudEntry(cloudJson.string("kName2")!!,
+                base64Decode(cloudJson.string("kData2")!!),
+                Date(cloudJson.long("kCreationDate2")!!),
+                Date(cloudJson.long("kModificationDate2")!!)))
+
+        val serializedEntries = cloudKeyStorage.serializeEntries(entriesArray)
+        assertNotNull(serializedEntries)
+
+        val expectedJson = Parser().parse(StringBuilder(ConvertionUtils.base64ToString(cloudJson.string("kExpectedResult")))) as JsonObject
+        val actualJson = Parser().parse(StringBuilder(ConvertionUtils.toString(serializedEntries))) as JsonObject
+
+        assertEquals(expectedJson.size, actualJson.size)
+        assertEquals(expectedJson.obj("key1"), actualJson.obj("key1"))
+        assertEquals(expectedJson.obj("key2")?.string("name"),
+                actualJson.obj("key2")?.string("name"))
+        assertEquals(expectedJson.obj("key2")?.string("data"),
+                actualJson.obj("key2")?.string("data"))
+        assertEquals(expectedJson.obj("key2")?.long("creation_date"),
+                actualJson.obj("key2")?.long("creation_date"))
+        assertEquals(expectedJson.obj("key2")?.long("modification_date"),
+                actualJson.obj("key2")?.long("modification_date"))
+        assertTrue(actualJson.obj("key2")?.obj("meta")?.isEmpty()!!)
+    }
+
+    @Test
+    fun deserializeEntries() {
+        // KTC-17
+        val cloudJson = Parser().parse(StringBuilder(CloudKeyStorageTest::class.java.getResource("/cloud.json").readText())) as JsonObject
+        val cloudKeyStorage = this.keyStorage as CloudKeyStorage
+
+        val data = ConvertionUtils.base64ToBytes(cloudJson.string("kExpectedResult"))
+        val entries = cloudKeyStorage.deserializeEntries(data)
+        assertNotNull(entries)
+        assertEquals(2, entries.size)
+        assertEquals(cloudJson.string("kData1"), base64Encode(entries[0].data))
+        assertEquals(cloudJson.string("kName1"), entries[0].name)
+        assertEquals(Date(cloudJson.long("kCreationDate1")!!), entries[0].creationDate)
+        assertEquals(Date(cloudJson.long("kModificationDate1")!!), entries[0].modificationDate)
+        assertNotNull(entries[0].meta)
+        cloudJson.obj("kMeta1")?.forEach {key, value ->
+            assertEquals(value, entries[0].meta[key])
+        }
+        assertEquals(cloudJson.string("kData2"), base64Encode(entries[1].data))
+        assertEquals(cloudJson.string("kName2"), entries[1].name)
+        assertEquals(Date(cloudJson.long("kCreationDate2")!!), entries[1].creationDate)
+        assertEquals(Date(cloudJson.long("kModificationDate2")!!), entries[1].modificationDate)
+        assertNotNull(entries[1].meta)
+    }
+
+    @Test
+    fun deserializeEntries_empty() {
+        // KTC-18
+        val cloudKeyStorage = this.keyStorage as CloudKeyStorage
+        val entries = cloudKeyStorage.deserializeEntries(byteArrayOf())
+        assertNotNull(entries)
+        assertTrue(entries.isEmpty())
     }
 
 }

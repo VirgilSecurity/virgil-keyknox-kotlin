@@ -34,6 +34,8 @@
 package com.virgilsecurity.keyknox.cloud
 
 
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
 import com.virgilsecurity.keyknox.KeyknoxManager
 import com.virgilsecurity.keyknox.client.KeyknoxClient
 import com.virgilsecurity.keyknox.crypto.KeyknoxCrypto
@@ -41,17 +43,19 @@ import com.virgilsecurity.keyknox.exception.CloudStorageOutOfSyncException
 import com.virgilsecurity.keyknox.exception.EntryAlreadyExistsException
 import com.virgilsecurity.keyknox.exception.EntryNotFoundException
 import com.virgilsecurity.keyknox.exception.EntrySavingException
+import com.virgilsecurity.keyknox.model.CloudEntries
 import com.virgilsecurity.keyknox.model.CloudEntry
 import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
 import com.virgilsecurity.keyknox.utils.Serializer
-import com.virgilsecurity.keyknox.utils.base64Decode
 import com.virgilsecurity.keyknox.utils.base64Encode
 import com.virgilsecurity.sdk.crypto.PrivateKey
 import com.virgilsecurity.sdk.crypto.PublicKey
 import com.virgilsecurity.sdk.jwt.contract.AccessTokenProvider
 import com.virgilsecurity.sdk.storage.JsonKeyEntry
 import com.virgilsecurity.sdk.storage.KeyEntry
+import com.virgilsecurity.sdk.utils.ConvertionUtils
 import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * Class responsible for storing keys in Keyknox cloud in a key/value storage manner.
@@ -219,19 +223,23 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
         }
     }
 
-    private fun deserializeEntries(data: ByteArray?): MutableList<CloudEntry> {
+    fun deserializeEntries(data: ByteArray?): MutableList<CloudEntry> {
         if (data == null || data.isEmpty()) {
             return arrayListOf()
         }
-        val json = base64Decode(data)
-        val entries = Serializer.klaxon.parseArray<CloudEntry>(json)
+        val json = ConvertionUtils.toString(data)
+        val cloudEntries = Serializer.klaxon.parse<CloudEntries>(json)
 
-        return entries?.toMutableList() ?: mutableListOf()
+        return cloudEntries?.values?.toMutableList() ?: mutableListOf()
     }
 
-    private fun serializeEntries(cloudEntries: Collection<CloudEntry>): ByteArray {
-        val json = Serializer.klaxon.toJsonString(cloudEntries)
-        return base64Encode(json)
+    fun serializeEntries(cloudEntries: Collection<CloudEntry>): ByteArray {
+        val map = mutableMapOf<String, CloudEntry>()
+        cloudEntries.forEach { entry ->
+            map[entry.name] = entry
+        }
+        val json = Serializer.klaxon.toJsonString(CloudEntries(map))
+        return ConvertionUtils.toBytes(json)
     }
 
 }

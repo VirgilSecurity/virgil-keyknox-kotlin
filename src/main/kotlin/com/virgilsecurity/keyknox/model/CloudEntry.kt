@@ -37,6 +37,7 @@ import com.beust.klaxon.Json
 import com.virgilsecurity.keyknox.utils.Base64EncodedArray
 import com.virgilsecurity.keyknox.utils.DateAsTimestamp
 import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * Class representing entry in cloud.
@@ -58,7 +59,7 @@ data class CloudEntry @JvmOverloads constructor(
         val modificationDate: Date,
 
         @Json(name = "meta")
-        val meta: Map<String, String> = mutableMapOf()) {
+        var meta: Map<String, String> = mutableMapOf()) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -82,3 +83,5 @@ data class CloudEntry @JvmOverloads constructor(
     }
 
 }
+
+class CloudEntries(map: Map<String, CloudEntry>) : Map<String, CloudEntry> by map

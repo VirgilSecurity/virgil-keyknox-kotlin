@@ -90,7 +90,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun pushValue() {
-        // KTC6
+        // KTC-6
         val data = base64Encode(UUID.randomUUID().toString())
         val decryptedValue = this.keyknoxManager.pushValue(data, null)
         assertArrayEquals(data, decryptedValue.value)
@@ -98,7 +98,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun pullValue() {
-        // KTC7
+        // KTC-7
         val data = base64Encode(UUID.randomUUID().toString())
         this.keyknoxManager.pushValue(data, null)
         val decryptedValue = this.keyknoxManager.pullValue()
@@ -107,7 +107,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun pullValue_empty() {
-        // KTC8
+        // KTC-8
         val decryptedValue = this.keyknoxManager.pullValue()
 
         assertNotNull(decryptedValue.value)
@@ -119,7 +119,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun pullValue_multiplePubKeys() {
-        // KTC9
+        // KTC-9
         val data = base64Encode(UUID.randomUUID().toString())
         val pubKeys1 = mutableListOf<VirgilPublicKey>()
         val pubKeys2 = mutableListOf<VirgilPublicKey>()
@@ -154,7 +154,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun pullValue_privateKeysDiffer() {
-        // KTC10
+        // KTC-10
         val data = base64Encode(UUID.randomUUID().toString())
         val keyPairs = mutableListOf<VirgilKeyPair>()
         val pubKeys = mutableListOf<VirgilPublicKey>()
@@ -194,7 +194,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun updateRecipients() {
-        // KTC11
+        // KTC-11
         val data = base64Encode(UUID.randomUUID().toString())
         val keyPairs = mutableListOf<VirgilKeyPair>()
         val pubKeys1 = mutableListOf<VirgilPublicKey>()
@@ -252,7 +252,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun updateRecipientsWithValue() {
-        // KTC12
+        // KTC-12
         val data = base64Encode(UUID.randomUUID().toString())
         val keyPairs = mutableListOf<VirgilKeyPair>()
         val pubKeys1 = mutableListOf<VirgilPublicKey>()
@@ -314,7 +314,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun updateRecipients_emptyValue() {
-        // KTC13
+        // KTC-13
         val keyPairs = mutableListOf<VirgilKeyPair>()
         val pubKeys1 = mutableListOf<VirgilPublicKey>()
         val pubKeys2 = mutableListOf<VirgilPublicKey>()
@@ -341,7 +341,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun resetValue() {
-        // KTC14
+        // KTC-14
         val data = base64Encode(UUID.randomUUID().toString())
 
         val decryptedValue = this.keyknoxManager.pushValue(data, null)
@@ -357,7 +357,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun resetValue_invalidValue() {
-        // KTC15
+        // KTC-15
         val data = base64Encode(UUID.randomUUID().toString())
         val keyPair1 = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
         val keyPair2 = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
@@ -379,7 +379,7 @@ class KeyknoxManagerTest {
 
     @Test
     fun getWithKeyknoxClient() {
-        // KTC16
+        // KTC-16
         val data = base64Encode(UUID.randomUUID().toString())
         val privateKeyData = this.virgilCrypto.exportPrivateKey(this.privateKey)
 
