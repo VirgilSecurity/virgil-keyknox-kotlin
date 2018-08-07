@@ -180,6 +180,7 @@ hs_err_pid*
 
 ### Gradle ###
 .gradle
+gradle.properties
 /build/
 
 # Ignore Gradle GUI config
