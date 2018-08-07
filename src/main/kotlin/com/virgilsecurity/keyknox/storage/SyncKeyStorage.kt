@@ -102,8 +102,7 @@ class SyncKeyStorage {
         }
         try {
             this.cloudKeyStorage.exists(name)
-        }
-        catch (e : Exception) {
+        } catch (e: Exception) {
             throw CloudEntryNotFoundWhileUpdatingException()
         }
         val cloudEntry = this.cloudKeyStorage.update(name, data, meta)
@@ -159,7 +158,7 @@ class SyncKeyStorage {
      *
      * @return key entry
      */
-    fun store(name: String, data: ByteArray, meta: Map<String, String>? = null) : KeyEntry {
+    fun store(name: String, data: ByteArray, meta: Map<String, String>? = null): KeyEntry {
         val keyEntry = this.keyStorage.createEntry(name, data)
         keyEntry.meta = meta ?: mapOf()
 
@@ -177,7 +176,7 @@ class SyncKeyStorage {
      *
      * @return list of stored entries
      */
-    fun store(keyEntries: List<KeyEntry>) : List<KeyEntry> {
+    fun store(keyEntries: List<KeyEntry>): List<KeyEntry> {
         keyEntries.forEach { keyEntry ->
             if (this.keyStorage.exists(keyEntry.name)) {
                 throw KeychainEntryAlreadyExistsWhileStoringException(keyEntry.name)
@@ -250,7 +249,7 @@ class SyncKeyStorage {
      *
      * @return keychain entries
      */
-    fun retrieveAll() : List<KeyEntry> {
+    fun retrieveAll(): List<KeyEntry> {
         return this.keyStorage.retrieveAll()
     }
 
@@ -261,7 +260,7 @@ class SyncKeyStorage {
      *
      * @return true if entry exists, false - otherwise
      */
-    fun exists(name: String) : Boolean {
+    fun exists(name: String): Boolean {
         return this.keyStorage.exists(name)
     }
 
@@ -285,7 +284,7 @@ class SyncKeyStorage {
     }
 
     private fun syncStoreEntries(entriesToStore: List<String>) {
-        entriesToStore.forEach {name ->
+        entriesToStore.forEach { name ->
             val cloudEntry = this.cloudKeyStorage.retrieve(name)
 
             val meta = this.keychainUtils.createMetaForKeychain(cloudEntry)
@@ -296,7 +295,8 @@ class SyncKeyStorage {
     private fun syncCompareEntries(entriesToCompare: List<String>, keychainEntries: List<KeyEntry>) {
         // Determine newest version and either update keychain entry or upload newer version to cloud
         entriesToCompare.forEach { name ->
-            val keychainEntry = keychainEntries.firstOrNull { name == it.name } ?: throw KeychainEntryNotFoundWhileComparingException()
+            val keychainEntry = keychainEntries.firstOrNull { name == it.name }
+                    ?: throw KeychainEntryNotFoundWhileComparingException()
             val cloudEntry = this.cloudKeyStorage.retrieve(name)
             val keychainDate = this.keychainUtils.extractModificationDate(keychainEntry)
 

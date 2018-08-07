@@ -35,10 +35,8 @@ package com.virgilsecurity.keyknox.utils
 
 import com.virgilsecurity.sdk.utils.Base64
 import com.virgilsecurity.sdk.utils.ConvertionUtils
-import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.logging.Logger
-import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObject
 
 inline fun base64Encode(array: ByteArray) = Base64.encode(array)
@@ -50,7 +48,7 @@ inline fun base64Decode(array: ByteArray) = ConvertionUtils.base64ToString(array
 inline fun base64Decode(string: String) = Base64.decode(string)
 
 fun ClosedRange<Int>.random() =
-        Random().nextInt((endInclusive + 1) - start) +  start
+        Random().nextInt((endInclusive + 1) - start) + start
 
 /**
  * Return logger for Java class, if companion object fix the name.

@@ -39,12 +39,9 @@ import com.virgilsecurity.crypto.VirgilSigner
 import com.virgilsecurity.keyknox.exception.*
 import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
 import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
-import com.virgilsecurity.sdk.crypto.PrivateKey
-import com.virgilsecurity.sdk.crypto.PublicKey
-import com.virgilsecurity.sdk.crypto.VirgilCrypto
-import com.virgilsecurity.sdk.crypto.VirgilPrivateKey
-import com.virgilsecurity.sdk.crypto.VirgilPublicKey
-import com.virgilsecurity.sdk.crypto.exceptions.*
+import com.virgilsecurity.sdk.crypto.*
+import com.virgilsecurity.sdk.crypto.exceptions.CryptoException
+import com.virgilsecurity.sdk.crypto.exceptions.KeyNotSupportedException
 
 class KeyknoxCrypto : KeyknoxCryptoProtocol {
 
@@ -52,7 +49,7 @@ class KeyknoxCrypto : KeyknoxCryptoProtocol {
 
     @Throws(CryptoException::class)
     override fun encrypt(data: ByteArray, privateKey: PrivateKey,
-                publicKeys: List<PublicKey>): Pair<ByteArray, ByteArray> {
+                         publicKeys: List<PublicKey>): Pair<ByteArray, ByteArray> {
         verifyPrivateKey(privateKey)
         verifyPublicKeys(publicKeys)
 
@@ -83,12 +80,12 @@ class KeyknoxCrypto : KeyknoxCryptoProtocol {
 
     @Throws(CryptoException::class)
     override fun decrypt(encryptedKeyknoxValue: EncryptedKeyknoxValue,
-                privateKey: PrivateKey, publicKeys: List<PublicKey>): DecryptedKeyknoxValue {
+                         privateKey: PrivateKey, publicKeys: List<PublicKey>): DecryptedKeyknoxValue {
 
-        if ((encryptedKeyknoxValue.meta == null ||encryptedKeyknoxValue.meta.isEmpty()) &&
+        if ((encryptedKeyknoxValue.meta == null || encryptedKeyknoxValue.meta.isEmpty()) &&
                 (encryptedKeyknoxValue.value == null || encryptedKeyknoxValue.value.isEmpty())) {
 
-            return DecryptedKeyknoxValue(meta = ByteArray(0), value =ByteArray(0),
+            return DecryptedKeyknoxValue(meta = ByteArray(0), value = ByteArray(0),
                     version = encryptedKeyknoxValue.version, keyknoxHash = encryptedKeyknoxValue.keyknoxHash)
         }
 

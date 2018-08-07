@@ -33,11 +33,7 @@
 
 package com.virgilsecurity.keyknox.crypto
 
-import org.junit.jupiter.api.Assertions.*
 import com.virgilsecurity.keyknox.exception.EmptyPublicKeysException
-import java.nio.charset.StandardCharsets
-import java.util.ArrayList
-import java.util.UUID
 import com.virgilsecurity.keyknox.exception.SignerNotFoundException
 import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
 import com.virgilsecurity.sdk.crypto.PrivateKey
@@ -45,7 +41,12 @@ import com.virgilsecurity.sdk.crypto.PublicKey
 import com.virgilsecurity.sdk.crypto.VirgilCrypto
 import com.virgilsecurity.sdk.crypto.exceptions.CryptoException
 import com.virgilsecurity.sdk.crypto.exceptions.KeyNotSupportedException
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * @author Andrii Iakovenko

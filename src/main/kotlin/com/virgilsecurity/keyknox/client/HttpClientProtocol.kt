@@ -37,7 +37,7 @@ import java.net.URL
 
 interface HttpClientProtocol {
 
-    fun send(url: URL, method: Method, accessToken: String, body: Any? = null, headers: Map<String, String>? = null) : Response
+    fun send(url: URL, method: Method, accessToken: String, body: Any? = null, headers: Map<String, String>? = null): Response
 }
 
 enum class Method {

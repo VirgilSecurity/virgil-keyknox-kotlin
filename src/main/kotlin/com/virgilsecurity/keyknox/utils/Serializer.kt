@@ -46,12 +46,12 @@ interface Serializer {
     companion object {
 
         val klaxon: Klaxon by lazy {
-            val dateConverter = object: Converter {
-                override fun canConvert(cls: Class<*>) : Boolean {
+            val dateConverter = object : Converter {
+                override fun canConvert(cls: Class<*>): Boolean {
                     return cls == Date::class.java
                 }
 
-                override fun fromJson(jv: JsonValue) : Date {
+                override fun fromJson(jv: JsonValue): Date {
                     val value = jv.longValue
                     return if (value != null) {
                         Date(value)
@@ -60,17 +60,17 @@ interface Serializer {
                     }
                 }
 
-                override fun toJson(value: Any) : String {
+                override fun toJson(value: Any): String {
                     val date = value as Date
                     return date.time.toString()
                 }
             }
-            val byteArrayConverter = object: Converter {
-                override fun canConvert(cls: Class<*>) : Boolean {
+            val byteArrayConverter = object : Converter {
+                override fun canConvert(cls: Class<*>): Boolean {
                     return cls == ByteArray::class.java
                 }
 
-                override fun fromJson(jv: JsonValue) : ByteArray {
+                override fun fromJson(jv: JsonValue): ByteArray {
                     val value = jv.string
                     return if (value != null) {
                         base64Decode(value)
@@ -79,15 +79,15 @@ interface Serializer {
                     }
                 }
 
-                override fun toJson(value: Any) : String {
+                override fun toJson(value: Any): String {
                     val array = value as ByteArray
                     val base64Encoded = base64Encode(array)
                     return "\"$base64Encoded\""
                 }
             }
 
-            val cloudEntriesConverter = object: Converter {
-                override fun canConvert(cls: Class<*>) : Boolean {
+            val cloudEntriesConverter = object : Converter {
+                override fun canConvert(cls: Class<*>): Boolean {
                     return cls == CloudEntries::class.java
                 }
 
@@ -106,9 +106,8 @@ interface Serializer {
                     return CloudEntries(map)
                 }
 
-                override fun toJson(value: Any) : String {
-                    fun joinToString(list: Collection<*>, open: String, close: String)
-                            = open + list.joinToString(", ") + close
+                override fun toJson(value: Any): String {
+                    fun joinToString(list: Collection<*>, open: String, close: String) = open + list.joinToString(", ") + close
 
                     value as Map<*, *>
                     val valueList = arrayListOf<String>()

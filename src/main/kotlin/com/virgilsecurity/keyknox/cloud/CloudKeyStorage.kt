@@ -34,8 +34,6 @@
 package com.virgilsecurity.keyknox.cloud
 
 
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.Parser
 import com.virgilsecurity.keyknox.KeyknoxManager
 import com.virgilsecurity.keyknox.client.KeyknoxClient
 import com.virgilsecurity.keyknox.crypto.KeyknoxCrypto
@@ -47,7 +45,6 @@ import com.virgilsecurity.keyknox.model.CloudEntries
 import com.virgilsecurity.keyknox.model.CloudEntry
 import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
 import com.virgilsecurity.keyknox.utils.Serializer
-import com.virgilsecurity.keyknox.utils.base64Encode
 import com.virgilsecurity.sdk.crypto.PrivateKey
 import com.virgilsecurity.sdk.crypto.PublicKey
 import com.virgilsecurity.sdk.jwt.contract.AccessTokenProvider
@@ -55,7 +52,6 @@ import com.virgilsecurity.sdk.storage.JsonKeyEntry
 import com.virgilsecurity.sdk.storage.KeyEntry
 import com.virgilsecurity.sdk.utils.ConvertionUtils
 import java.util.*
-import kotlin.collections.HashMap
 
 /**
  * Class responsible for storing keys in Keyknox cloud in a key/value storage manner.
@@ -128,7 +124,8 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
         val now = Date()
         val creationDate = this.cache[name]?.creationDate ?: now
 
-        val cloudEntry = CloudEntry(name = name, data = data, creationDate = creationDate, modificationDate = now, meta = meta ?: mapOf())
+        val cloudEntry = CloudEntry(name = name, data = data, creationDate = creationDate, modificationDate = now, meta = meta
+                ?: mapOf())
 
         this.cache[name] = cloudEntry
 
@@ -214,7 +211,7 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
         this.decryptedKeyknoxData = response
     }
 
-    private fun cacheEntries(cloudEntries: MutableList<CloudEntry>, clear : Boolean = false) {
+    private fun cacheEntries(cloudEntries: MutableList<CloudEntry>, clear: Boolean = false) {
         if (clear) {
             this.cache.clear()
         }

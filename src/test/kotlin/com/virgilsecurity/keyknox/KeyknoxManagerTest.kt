@@ -123,7 +123,7 @@ class KeyknoxManagerTest {
         val data = base64Encode(UUID.randomUUID().toString())
         val pubKeys1 = mutableListOf<VirgilPublicKey>()
         val pubKeys2 = mutableListOf<VirgilPublicKey>()
-        var privKey : VirgilPrivateKey = this.privateKey
+        var privKey: VirgilPrivateKey = this.privateKey
         for (i in 0..this.numberOfKeys) {
             val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
             if (i == 0) {
@@ -148,7 +148,7 @@ class KeyknoxManagerTest {
         try {
             keyknoxManager2.pullValue()
             fail<Boolean>("Keys hacked with wrong keys")
-        } catch (e : SignerNotFoundException) {
+        } catch (e: SignerNotFoundException) {
         }
     }
 
@@ -182,13 +182,13 @@ class KeyknoxManagerTest {
         val decryptedValue2 = keyknoxManager2.pullValue()
         assertArrayEquals(data, decryptedValue2.value)
 
-        val privKey3 = keyPairs[(half+1..last).random()].privateKey
+        val privKey3 = keyPairs[(half + 1..last).random()].privateKey
         val keyknoxManager3 = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = this.keyknoxClient, crypto = this.keyknoxCrypto,
                 privateKey = privKey3, publicKeys = pubKeys1, retryOnUnauthorized = false)
         try {
             keyknoxManager3.pullValue()
             fail<Boolean>("Keys hacked with wrong keys")
-        } catch (e : KeyknoxCryptoException) {
+        } catch (e: KeyknoxCryptoException) {
         }
     }
 
@@ -211,21 +211,21 @@ class KeyknoxManagerTest {
             }
         }
 
-        val rand = (0 .. half).random()
+        val rand = (0..half).random()
         val keyknoxManager1 = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = this.keyknoxClient, crypto = this.keyknoxCrypto,
                 privateKey = keyPairs[rand].privateKey, publicKeys = pubKeys1, retryOnUnauthorized = false)
         val decryptedValue1 = keyknoxManager1.pushValue(data, null)
         assertArrayEquals(data, decryptedValue1.value)
 
         val rand1 = (0..half).random()
-        val rand2 = (half+1..last).random()
+        val rand2 = (half + 1..last).random()
         val keyknoxManager2 = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = this.keyknoxClient, crypto = this.keyknoxCrypto,
                 privateKey = keyPairs[rand1].privateKey, publicKeys = pubKeys1, retryOnUnauthorized = false)
         val decryptedValue2 = keyknoxManager2.updateRecipients(pubKeys2, keyPairs[rand2].privateKey)
         assertArrayEquals(data, decryptedValue2.value)
         //TODO verify publicKeys and privateKey are changed
 
-        val rand3 = (half+1..last).random()
+        val rand3 = (half + 1..last).random()
         val keyknoxManager3 = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = this.keyknoxClient, crypto = this.keyknoxCrypto,
                 privateKey = keyPairs[rand3].privateKey, publicKeys = pubKeys2, retryOnUnauthorized = false)
         val decryptedValue3 = keyknoxManager3.pullValue()
@@ -237,16 +237,16 @@ class KeyknoxManagerTest {
         try {
             keyknoxManager4.pullValue()
             fail<Boolean>("Keys hacked with wrong keys")
-        } catch (e : KeyknoxCryptoException) {
+        } catch (e: KeyknoxCryptoException) {
         }
 
-        val rand5 = (half+1..last).random()
+        val rand5 = (half + 1..last).random()
         val keyknoxManager5 = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = this.keyknoxClient, crypto = this.keyknoxCrypto,
                 privateKey = keyPairs[rand5].privateKey, publicKeys = pubKeys1, retryOnUnauthorized = false)
         try {
             keyknoxManager5.pullValue()
             fail<Boolean>("Keys hacked with wrong keys")
-        } catch (e : KeyknoxCryptoException) {
+        } catch (e: KeyknoxCryptoException) {
         }
     }
 
@@ -263,7 +263,7 @@ class KeyknoxManagerTest {
             keyPairs.add(keyPair)
             if (i < half) {
                 pubKeys1.add(keyPair.publicKey)
-               } else {
+            } else {
                 pubKeys2.add(keyPair.publicKey)
             }
         }
@@ -291,7 +291,7 @@ class KeyknoxManagerTest {
         try {
             keyknoxManager3.pullValue()
             fail<Boolean>("Keys hacked with wrong keys")
-        } catch (e : DecryptionFailedException) {
+        } catch (e: DecryptionFailedException) {
         }
 
         val keyknoxManager4 = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = this.keyknoxClient, crypto = this.keyknoxCrypto,
@@ -299,7 +299,7 @@ class KeyknoxManagerTest {
         try {
             keyknoxManager4.pullValue()
             fail<Boolean>("Keys hacked with wrong keys")
-        } catch (e : DecryptionFailedException) {
+        } catch (e: DecryptionFailedException) {
         }
 
         val rand5 = (half until this.numberOfKeys).random()
@@ -308,7 +308,7 @@ class KeyknoxManagerTest {
         try {
             keyknoxManager5.pullValue()
             fail<Boolean>("Keys hacked with wrong keys")
-        } catch (e : SignerNotFoundException) {
+        } catch (e: SignerNotFoundException) {
         }
     }
 

@@ -37,7 +37,6 @@ import com.google.gson.JsonObject
 import com.virgilsecurity.keyknox.exception.KeyknoxServiceException
 import com.virgilsecurity.keyknox.utils.Loggable
 import com.virgilsecurity.keyknox.utils.Serializer
-import com.virgilsecurity.sdk.client.exceptions.VirgilCardServiceException
 import com.virgilsecurity.sdk.common.ErrorResponse
 import com.virgilsecurity.sdk.utils.ConvertionUtils
 import com.virgilsecurity.sdk.utils.StringUtils

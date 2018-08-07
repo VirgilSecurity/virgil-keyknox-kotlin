@@ -40,7 +40,6 @@ import com.virgilsecurity.sdk.crypto.PublicKey
 import com.virgilsecurity.sdk.crypto.exceptions.CryptoException
 
 
-
 interface KeyknoxCryptoProtocol {
 
     /**

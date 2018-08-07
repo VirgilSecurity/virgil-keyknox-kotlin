@@ -55,7 +55,7 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
                      private val keyknoxClient: KeyknoxClientProtocol,
                      var publicKeys: List<PublicKey>, var privateKey: PrivateKey,
                      private val crypto: KeyknoxCryptoProtocol,
-                     val retryOnUnauthorized : Boolean = false) {
+                     val retryOnUnauthorized: Boolean = false) {
 
     init {
         if (publicKeys.isEmpty()) {
@@ -90,7 +90,7 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
     /**
      * Resets Keyknox value (makes it empty). Also increments version
      */
-    fun resetValue() : DecryptedKeyknoxValue {
+    fun resetValue(): DecryptedKeyknoxValue {
         val tokenContext = TokenContext("delete", retryOnUnauthorized, "keyknox")
         val token = this.accessTokenProvider.getToken(tokenContext)
         val response = this.keyknoxClient.resetValue(token.stringRepresentation())
@@ -175,7 +175,7 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
         return this.crypto.decrypt(response, this.privateKey, this.publicKeys)
     }
 
-    private fun verifyServerResponse(encryptedValue : Pair<ByteArray, ByteArray>, response: EncryptedKeyknoxValue) {
+    private fun verifyServerResponse(encryptedValue: Pair<ByteArray, ByteArray>, response: EncryptedKeyknoxValue) {
         if (!Arrays.equals(encryptedValue.first, response.meta)) {
             throw TamperedServerResponseException("Response meta is tampered")
         }

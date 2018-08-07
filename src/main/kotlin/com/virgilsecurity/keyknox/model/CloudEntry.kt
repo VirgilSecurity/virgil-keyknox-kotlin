@@ -37,7 +37,6 @@ import com.beust.klaxon.Json
 import com.virgilsecurity.keyknox.utils.Base64EncodedArray
 import com.virgilsecurity.keyknox.utils.DateAsTimestamp
 import java.util.*
-import kotlin.collections.HashMap
 
 /**
  * Class representing entry in cloud.

@@ -37,7 +37,7 @@ import com.virgilsecurity.keyknox.exception.ConvertKeychainEntryException
 import com.virgilsecurity.sdk.storage.KeyEntry
 import com.virgilsecurity.sdk.storage.KeyStorage
 
-class KeyStorageWrapper (val identity: String, val keychainStorage: KeyStorage)  {
+class KeyStorageWrapper(val identity: String, val keychainStorage: KeyStorage) {
 
     fun store(name: String, data: ByteArray, meta: Map<String, String>? = null): KeyEntry {
         val keychainName = this.keychainName(name)
@@ -86,16 +86,16 @@ class KeyStorageWrapper (val identity: String, val keychainStorage: KeyStorage) 
         return this.keychainStorage.createEntry(name, data)
     }
 
-    private fun keychainPrefix() : String {
+    private fun keychainPrefix(): String {
         return "VIRGIL.IDENTITY=${this.identity}."
     }
 
-    private fun keychainName(entryName: String) : String {
+    private fun keychainName(entryName: String): String {
         val prefix = this.keychainPrefix()
         return "$prefix$entryName"
     }
 
-    private fun entryName(keychainName: String) : String? {
+    private fun entryName(keychainName: String): String? {
         if (!keychainName.startsWith(this.keychainPrefix())) {
             return null
         }
@@ -103,7 +103,7 @@ class KeyStorageWrapper (val identity: String, val keychainStorage: KeyStorage) 
         return keychainName.replaceFirst(this.keychainPrefix(), "")
     }
 
-    private fun mapKeychainEntry(keychainEntry: KeyEntry) : KeyEntry? {
+    private fun mapKeychainEntry(keychainEntry: KeyEntry): KeyEntry? {
         val entryName = this.entryName(keychainEntry.name) ?: return null
 
         val entry = this.keychainStorage.createEntry(entryName, keychainEntry.value)

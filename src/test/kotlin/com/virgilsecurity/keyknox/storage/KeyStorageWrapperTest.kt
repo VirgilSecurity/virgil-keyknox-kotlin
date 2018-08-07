@@ -80,7 +80,7 @@ class KeyStorageWrapperTest {
         assertEquals(name, wrappedEntries[0].name)
         assertArrayEquals(data1, wrappedEntries[0].value)
 
-        val names =  this.keyStorage.names()
+        val names = this.keyStorage.names()
         assertEquals(2, names.size)
         assertTrue(names.contains(name))
         assertTrue(names.contains(wrappedName))
@@ -108,15 +108,13 @@ class KeyStorageWrapperTest {
         try {
             this.keyStorageWrapper.retrieve(name)
             fail<String>("Entry had been removed")
-        }
-        catch (e : KeyStorageException) {
+        } catch (e: KeyStorageException) {
             // nothing to do
         }
         try {
             this.keyStorageWrapper.retrieve(wrappedName)
             fail<String>("Entry had been removed")
-        }
-        catch (e : KeyStorageException) {
+        } catch (e: KeyStorageException) {
             // nothing to do
         }
 
@@ -158,8 +156,7 @@ class KeyStorageWrapperTest {
         try {
             this.keyStorageWrapper.update(name2, data3)
             fail<String>("Entry not exists")
-        }
-        catch (e : KeyStorageException) {
+        } catch (e: KeyStorageException) {
             // nothing to do
         }
         val entry = this.keyStorageWrapper.retrieve(name1)

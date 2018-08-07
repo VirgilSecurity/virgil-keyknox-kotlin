@@ -42,7 +42,7 @@ import java.util.*
 
 class KeychainUtils {
 
-    fun createMetaForKeychain(cloudEntry: CloudEntry) : Map<String, String> {
+    fun createMetaForKeychain(cloudEntry: CloudEntry): Map<String, String> {
         val meta = mutableMapOf<String, String>()
 
         meta[KEYKNOX_META_CREATION_DATE_KEY] = cloudEntry.creationDate?.time.toString()
@@ -56,8 +56,7 @@ class KeychainUtils {
         try {
             extractModificationDate(keyEntry)
             return true
-        }
-        catch (e : Exception) {
+        } catch (e: Exception) {
             return false
         }
     }
@@ -65,23 +64,23 @@ class KeychainUtils {
     fun extractModificationDate(keyEntry: KeyEntry): Pair<Date, Date> {
         val meta = keyEntry.meta ?: throw NoMetaInKeychainEntryException()
 
-        val modificationTimestampStr = meta[KeychainUtils.KEYKNOX_META_MODIFICATION_DATE_KEY] ?: throw InvalidModificationDateInKeychainEntryException()
+        val modificationTimestampStr = meta[KeychainUtils.KEYKNOX_META_MODIFICATION_DATE_KEY]
+                ?: throw InvalidModificationDateInKeychainEntryException()
         val modificationTimestamp = try {
             modificationTimestampStr.toLong()
-        }
-        catch (e : NumberFormatException) {
+        } catch (e: NumberFormatException) {
             throw InvalidModificationDateInKeychainEntryException()
         }
 
-        val creationTimestampStr = meta[KeychainUtils.KEYKNOX_META_CREATION_DATE_KEY] ?: throw InvalidCreationDateInKeychainEntryException()
+        val creationTimestampStr = meta[KeychainUtils.KEYKNOX_META_CREATION_DATE_KEY]
+                ?: throw InvalidCreationDateInKeychainEntryException()
         val creationTimestamp = try {
             creationTimestampStr.toLong()
-        }
-        catch (e : NumberFormatException) {
+        } catch (e: NumberFormatException) {
             throw InvalidCreationDateInKeychainEntryException()
         }
 
-        return Pair (Date(creationTimestamp), Date(modificationTimestamp))
+        return Pair(Date(creationTimestamp), Date(modificationTimestamp))
     }
 
 

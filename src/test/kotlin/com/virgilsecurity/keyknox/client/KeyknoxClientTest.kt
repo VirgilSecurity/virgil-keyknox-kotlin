@@ -74,7 +74,7 @@ class KeyknoxClientTest {
         // KTC-1
         val data = base64Encode(UUID.randomUUID().toString())
         val privateKeyData = this.virgilCrypto.exportPrivateKey(this.privateKey)
-        val publicKeyData =this.virgilCrypto.exportPublicKey(this.publicKey)
+        val publicKeyData = this.virgilCrypto.exportPublicKey(this.publicKey)
 
         val signer = VirgilSigner(VirgilHash.Algorithm.SHA512)
         val signature = signer.sign(data, privateKeyData)
@@ -109,7 +109,7 @@ class KeyknoxClientTest {
         val data = base64Encode(UUID.randomUUID().toString())
         val data2 = base64Encode(UUID.randomUUID().toString())
         val privateKeyData = this.virgilCrypto.exportPrivateKey(this.privateKey)
-        val publicKeyData =this.virgilCrypto.exportPublicKey(this.publicKey)
+        val publicKeyData = this.virgilCrypto.exportPublicKey(this.publicKey)
 
         val signer = VirgilSigner(VirgilHash.Algorithm.SHA512)
         val signature = signer.sign(data, privateKeyData)

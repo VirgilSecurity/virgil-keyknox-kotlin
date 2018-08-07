@@ -53,7 +53,7 @@ class KeyknoxClient : KeyknoxClientProtocol {
     val serviceUrl: URL
     val httpClient: HttpClientProtocol
 
-    constructor(serviceUrl : URL = URL("https://api.virgilsecurity.com")) {
+    constructor(serviceUrl: URL = URL("https://api.virgilsecurity.com")) {
         this.serviceUrl = serviceUrl
         this.httpClient = HttpClient()
     }
@@ -90,7 +90,7 @@ class KeyknoxClient : KeyknoxClientProtocol {
         return DecryptedKeyknoxValue(keyknoxValue)
     }
 
-    private fun extractKeyknoxValue(response: Response) : KeyknoxValue {
+    private fun extractKeyknoxValue(response: Response): KeyknoxValue {
         val body = JsonParser().parse(response.body) as JsonObject
         val meta = base64Decode(body["meta"].asString)
         val value = base64Decode(body["value"].asString)
