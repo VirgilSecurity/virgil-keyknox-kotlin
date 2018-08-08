@@ -41,6 +41,8 @@ import com.virgilsecurity.keyknox.cloud.CloudKeyStorageProtocol
 import com.virgilsecurity.keyknox.crypto.KeyknoxCrypto
 import com.virgilsecurity.keyknox.exception.CloudEntryNotFoundWhileUpdatingException
 import com.virgilsecurity.keyknox.exception.CloudStorageOutOfSyncException
+import com.virgilsecurity.keyknox.exception.DecryptionFailedException
+import com.virgilsecurity.keyknox.exception.SignerNotFoundException
 import com.virgilsecurity.keyknox.model.CloudEntry
 import com.virgilsecurity.sdk.common.TimeSpan
 import com.virgilsecurity.sdk.crypto.*
@@ -487,5 +489,48 @@ class SyncKeyStorageTests {
         }
     }
 
+    @Test
+    fun conversation() {
+        val keyPair2 = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val privateKey2 = keyPair2.privateKey
+        val publicKey2 = keyPair2.publicKey
+
+        val jwtGenerator = JwtGenerator(TestConfig.appId, TestConfig.apiKey, TestConfig.apiPublicKeyId, TimeSpan.fromTime(100, TimeUnit.SECONDS),
+                VirgilAccessTokenSigner(this.virgilCrypto))
+        val provider = CachingJwtProvider(CachingJwtProvider.RenewJwtCallback { jwtGenerator.generateToken(identity) })
+        var keyknoxManager = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = KeyknoxClient(), crypto = KeyknoxCrypto(),
+                privateKey = privateKey2, publicKeys = arrayListOf(publicKey2), retryOnUnauthorized = false)
+
+        val keyStorage = DefaultKeyStorage(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
+        var syncKeyStorage2 = SyncKeyStorage(identity = this.identity, keyStorage = keyStorage, cloudKeyStorage = CloudKeyStorage(keyknoxManager))
+
+        val name = UUID.randomUUID().toString()
+        val data = publicKey2.rawKey
+
+        syncKeyStorage.sync()
+        syncKeyStorage.store(name, data)
+
+        try {
+            syncKeyStorage2.sync()
+            fail<String>("Data in cloud is not encrypted with my key")
+        }
+        catch (e : DecryptionFailedException) {}
+
+        syncKeyStorage.updateRecipients(arrayListOf(this.publicKey, publicKey2))
+
+        try {
+            syncKeyStorage2.sync()
+            fail<String>("I don't have signers public key yet")
+        }
+        catch (e : SignerNotFoundException) {}
+
+        // Reinit syncKeyStorage2
+        keyknoxManager = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = KeyknoxClient(), crypto = KeyknoxCrypto(),
+                privateKey = privateKey2, publicKeys = arrayListOf(this.publicKey, publicKey2), retryOnUnauthorized = false)
+        syncKeyStorage2 = SyncKeyStorage(identity = this.identity, keyStorage = keyStorage, cloudKeyStorage = CloudKeyStorage(keyknoxManager))
+
+        syncKeyStorage2.sync()
+        assertEquals(1, syncKeyStorage2.retrieveAll().size)
+    }
 
 }

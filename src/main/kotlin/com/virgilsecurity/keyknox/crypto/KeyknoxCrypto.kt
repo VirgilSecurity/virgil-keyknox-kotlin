@@ -66,8 +66,8 @@ class KeyknoxCrypto : KeyknoxCryptoProtocol {
 
                 for (publicKey in publicKeys) {
                     val virgilPublicKey = publicKey as VirgilPublicKey
-                    cipher.addKeyRecipient(virgilPublicKey.identifier,
-                            this.crypto.exportPublicKey(virgilPublicKey))
+                    val virgilPublicKeyData = this.crypto.exportPublicKey(virgilPublicKey)
+                    cipher.addKeyRecipient(virgilPublicKey.identifier, virgilPublicKeyData)
                 }
 
                 val encryptedData = cipher.encrypt(data, false)
