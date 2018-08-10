@@ -95,6 +95,29 @@ class SyncKeyStorageTests {
     }
 
     @Test
+    fun init() {
+        val jwtGenerator = JwtGenerator(TestConfig.appId, TestConfig.apiKey, TestConfig.apiPublicKeyId, TimeSpan.fromTime(100, TimeUnit.SECONDS),
+                VirgilAccessTokenSigner(this.virgilCrypto))
+
+        // Setup Access Token provider to provide access token for Virgil services
+        // Check https://github.com/VirgilSecurity/virgil-sdk-java-android
+        val accessTokenProvider = CachingJwtProvider(CachingJwtProvider.RenewJwtCallback { jwtGenerator.generateToken(identity) })
+
+        // Download public keys of users that should have access to data from Virgil Cards service
+        // Check https://github.com/VirgilSecurity/virgil-sdk-java-android
+        val publicKeys = arrayListOf(this.publicKey)
+
+        // Load private key from Keychain
+        val privateKey = this.privateKey
+
+        val syncKeyStorage = SyncKeyStorage(identity = "Alice", accessTokenProvider = accessTokenProvider,
+                publicKeys = publicKeys, privateKey = privateKey)
+
+        syncKeyStorage.sync()
+        assertTrue(syncKeyStorage.retrieveAll().isEmpty())
+    }
+
+    @Test
     fun sync() {
         // KTC-29
         this.syncKeyStorage.sync()
@@ -513,16 +536,16 @@ class SyncKeyStorageTests {
         try {
             syncKeyStorage2.sync()
             fail<String>("Data in cloud is not encrypted with my key")
+        } catch (e: DecryptionFailedException) {
         }
-        catch (e : DecryptionFailedException) {}
 
         syncKeyStorage.updateRecipients(arrayListOf(this.publicKey, publicKey2))
 
         try {
             syncKeyStorage2.sync()
             fail<String>("I don't have signers public key yet")
+        } catch (e: SignerNotFoundException) {
         }
-        catch (e : SignerNotFoundException) {}
 
         // Reinit syncKeyStorage2
         keyknoxManager = KeyknoxManager(accessTokenProvider = provider, keyknoxClient = KeyknoxClient(), crypto = KeyknoxCrypto(),

@@ -20,15 +20,15 @@ Virgil Keyknox Service allows users to store their sensitive data (such as Priva
 
 Virgil Keyknox SDK is provided as a set of frameworks. These frameworks are distributed via Carthage and CocoaPods. Also in this guide, you find one more package called VirgilCrypto (Virgil Crypto Library) that is used by the SDK to perform cryptographic operations.
 
-The Virgil Java SDK is provided as a package named com.virgilsecurity.sdk. The package is distributed via Maven repository.
+TheVirgil Keyknox SDK is provided as a package named com.virgilsecurity.keyknox. The package is distributed via Maven repository.
 
 The package is available for:
-- Java 7 and newer
+- Java 8 and newer
 - Android API 16 and newer
 
 Prerequisites:
-- Java Development Kit (JDK) 7+
-- Maven 3+
+- Java Development Kit (JDK) 8+
+- Gradle 4+
 
 You can easily add SDK dependency to your project, just follow the examples below.
 
@@ -45,7 +45,7 @@ To integrate Virgil Keyknox SDK into your Java project using Maven, set up depen
     <dependency>
         <groupId>com.virgilsecurity</groupId>
         <artifactId>keyknox</artifactId>
-        <version>1.0</version>
+        <version>0.1.0</version>
     </dependency>
 </dependencies>
 ```
@@ -60,7 +60,7 @@ To integrate Virgil Keyknox SDK into your Java project using Gradle, set up depe
 
 ```
 dependencies {
-    compile 'com.virgilsecurity:keyknox:1.0'
+    compile 'com.virgilsecurity:keyknox:0.1.0'
 }
 ```
 
@@ -79,7 +79,7 @@ Set up dependencies in your `build.gradle`:
 ```
 dependencies {
     implementation 'com.virgilsecurity.sdk:crypto-android:5.0.4@aar'
-    implementation ('com.virgilsecurity:keyknox:1.0') {
+    implementation ('com.virgilsecurity:keyknox:0.1.0') {
         exclude group: 'com.virgilsecurity.sdk', module: 'crypto'
     }
 }
@@ -95,7 +95,19 @@ In order to initialize `SyncKeyStorage` class you'll need the following values:
 - `identity` of the user (the device can have different users)
 
 ```java
-TBD
+// Setup Access Token provider to provide access token for Virgil services
+// Check https://github.com/VirgilSecurity/virgil-sdk-java-android
+val accessTokenProvider = ...
+
+// Download public keys of users that should have access to data from Virgil Cards service
+// Check https://github.com/VirgilSecurity/virgil-sdk-java-android
+val publicKeys = ...
+
+// Load private key from Keychain
+val privateKey = ..
+
+val syncKeyStorage = SyncKeyStorage(identity = "Alice", accessTokenProvider = accessTokenProvider,
+        publicKeys = publicKeys, privateKey = privateKey)
 ```
 
 ## Docs
