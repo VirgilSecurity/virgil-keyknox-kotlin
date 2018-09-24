@@ -52,6 +52,7 @@ import com.virgilsecurity.sdk.storage.JsonKeyEntry
 import com.virgilsecurity.sdk.storage.KeyEntry
 import com.virgilsecurity.sdk.utils.ConvertionUtils
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Class responsible for storing keys in Keyknox cloud in a key/value storage manner.
@@ -61,7 +62,7 @@ import java.util.*
 open class CloudKeyStorage : CloudKeyStorageProtocol {
 
     val keyknoxManager: KeyknoxManager
-    private var cache: MutableMap<String, CloudEntry> = hashMapOf()
+    private var cache: MutableMap<String, CloudEntry> = ConcurrentHashMap()
     private var decryptedKeyknoxData: DecryptedKeyknoxValue? = null
 
     constructor(keyknoxManager: KeyknoxManager) {
@@ -82,29 +83,31 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
         if (!isStorageSynced()) {
             throw CloudStorageOutOfSyncException()
         }
-        keyEntries.forEach { entry ->
-            if (this.cache.containsKey(entry.name)) {
-                throw EntryAlreadyExistsException()
+        synchronized(this.cache) {
+            keyEntries.forEach { entry ->
+                if (this.cache.containsKey(entry.name)) {
+                    throw EntryAlreadyExistsException()
+                }
             }
+
+            val cloudEntries = arrayListOf<CloudEntry>()
+            keyEntries.forEach { entry ->
+                val now = Date()
+                val cloudEntry = CloudEntry(entry.name, entry.value, now, now, entry.meta)
+                cloudEntries.add(cloudEntry)
+                this.cache[cloudEntry.name] = cloudEntry
+            }
+            val data = serializeEntries(this.cache.values)
+
+            val hash = this.decryptedKeyknoxData?.keyknoxHash
+
+            val response = this.keyknoxManager.pushValue(data, hash)
+            val newEntries = deserializeEntries(response.value)
+            cacheEntries(newEntries)
+            this.decryptedKeyknoxData = response
+
+            return cloudEntries
         }
-
-        val cloudEntries = arrayListOf<CloudEntry>()
-        keyEntries.forEach { entry ->
-            val now = Date()
-            val cloudEntry = CloudEntry(entry.name, entry.value, now, now, entry.meta)
-            cloudEntries.add(cloudEntry)
-            this.cache[cloudEntry.name] = cloudEntry //TODO Why?
-        }
-
-        val data = serializeEntries(this.cache.values)
-        val hash = this.decryptedKeyknoxData?.keyknoxHash
-
-        val response = this.keyknoxManager.pushValue(data, hash)
-        val newEntries = deserializeEntries(response.value)
-        cacheEntries(newEntries)
-        this.decryptedKeyknoxData = response
-
-        return cloudEntries
     }
 
     override fun store(name: String, data: ByteArray, meta: Map<String, String>?): CloudEntry {
@@ -122,29 +125,34 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
             throw CloudStorageOutOfSyncException()
         }
         val now = Date()
-        val creationDate = this.cache[name]?.creationDate ?: now
+        synchronized(this.cache) {
+            val creationDate = this.cache[name]?.creationDate ?: now
 
-        val cloudEntry = CloudEntry(name = name, data = data, creationDate = creationDate, modificationDate = now, meta = meta
-                ?: mapOf())
+            val cloudEntry = CloudEntry(name = name, data = data, creationDate = creationDate, modificationDate = now, meta = meta
+                    ?: mapOf())
 
-        this.cache[name] = cloudEntry
+            this.cache[name] = cloudEntry
 
-        val data = serializeEntries(this.cache.values)
-        val response = this.keyknoxManager.pushValue(data, this.decryptedKeyknoxData?.keyknoxHash)
-        cacheEntries(deserializeEntries(response.value))
-        this.decryptedKeyknoxData = response
+            val value = serializeEntries(this.cache.values)
 
-        return cloudEntry
+            val response = this.keyknoxManager.pushValue(value, this.decryptedKeyknoxData?.keyknoxHash)
+            cacheEntries(deserializeEntries(response.value))
+            this.decryptedKeyknoxData = response
+
+            return cloudEntry
+        }
     }
 
     override fun retrieveAll(): List<CloudEntry> {
         if (!isStorageSynced()) {
             throw CloudStorageOutOfSyncException()
         }
-        val cacheEntries = mutableListOf<CloudEntry>()
-        cacheEntries.addAll(this.cache.values)
+        synchronized(this.cache) {
+            val cacheEntries = mutableListOf<CloudEntry>()
+            cacheEntries.addAll(this.cache.values)
 
-        return cacheEntries
+            return cacheEntries
+        }
     }
 
     override fun retrieve(name: String): CloudEntry {
@@ -169,46 +177,55 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
         if (!isStorageSynced()) {
             throw CloudStorageOutOfSyncException()
         }
-        names.forEach { name ->
-            if (!this.cache.containsKey(name)) {
-                throw EntryNotFoundException(name)
+        synchronized(this.cache) {
+            names.forEach { name ->
+                if (!this.cache.containsKey(name)) {
+                    throw EntryNotFoundException(name)
+                }
             }
+            names.forEach { name ->
+                this.cache.remove(name)
+            }
+            val data = serializeEntries(this.cache.values)
+            val response = this.keyknoxManager.pushValue(data, this.decryptedKeyknoxData?.keyknoxHash)
+            cacheEntries(deserializeEntries(response.value))
+            this.decryptedKeyknoxData = response
         }
-        names.forEach { name ->
-            this.cache.remove(name)
-        }
-        val data = serializeEntries(this.cache.values)
-        val response = this.keyknoxManager.pushValue(data, this.decryptedKeyknoxData?.keyknoxHash)
-        cacheEntries(deserializeEntries(response.value))
-        this.decryptedKeyknoxData = response
     }
 
     override fun deleteAll() {
-        val response = this.keyknoxManager.resetValue()
-        cacheEntries(deserializeEntries(response.value), true)
-        this.decryptedKeyknoxData = response
+        synchronized(this.cache) {
+            val response = this.keyknoxManager.resetValue()
+            cacheEntries(deserializeEntries(response.value), true)
+            this.decryptedKeyknoxData = response
+        }
     }
 
     override fun retrieveCloudEntries() {
-        val response = this.keyknoxManager.pullValue()
-        cacheEntries(deserializeEntries(response.value), true)
-        this.decryptedKeyknoxData = response
+        synchronized(this.cache) {
+            val response = this.keyknoxManager.pullValue()
+            cacheEntries(deserializeEntries(response.value), true)
+            this.decryptedKeyknoxData = response
+        }
     }
 
     override fun updateRecipients(newPublicKeys: List<PublicKey>?, newPrivateKey: PrivateKey?) {
-        val decryptedKeyknoxData = this.decryptedKeyknoxData ?: throw CloudStorageOutOfSyncException()
+        synchronized(this.cache) {
+            val decryptedKeyknoxData = this.decryptedKeyknoxData ?: throw CloudStorageOutOfSyncException()
 
-        // Cloud is empty, no need to update anything
-        if ((decryptedKeyknoxData.value == null || decryptedKeyknoxData.value.isEmpty()) &&
-                (decryptedKeyknoxData.meta == null || decryptedKeyknoxData.meta.isEmpty())) {
-            return
+
+            // Cloud is empty, no need to update anything
+            if ((decryptedKeyknoxData.value == null || decryptedKeyknoxData.value.isEmpty()) &&
+                    (decryptedKeyknoxData.meta == null || decryptedKeyknoxData.meta.isEmpty())) {
+                return
+            }
+
+            val response = this.keyknoxManager.updateRecipients(value = decryptedKeyknoxData.value,
+                    previousHash = decryptedKeyknoxData.keyknoxHash,
+                    newPublicKeys = newPublicKeys, newPrivateKey = newPrivateKey)
+            cacheEntries(deserializeEntries(response.value))
+            this.decryptedKeyknoxData = response
         }
-
-        val response = this.keyknoxManager.updateRecipients(value = decryptedKeyknoxData.value,
-                previousHash = decryptedKeyknoxData.keyknoxHash,
-                newPublicKeys = newPublicKeys, newPrivateKey = newPrivateKey)
-        cacheEntries(deserializeEntries(response.value))
-        this.decryptedKeyknoxData = response
     }
 
     private fun cacheEntries(cloudEntries: MutableList<CloudEntry>, clear: Boolean = false) {

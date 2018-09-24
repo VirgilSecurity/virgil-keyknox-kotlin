@@ -106,8 +106,8 @@ class KeyknoxClient : KeyknoxClientProtocol {
     }
 
     companion object {
-        const val VIRGIL_KEYKNOX_HASH_KEY = "Virgil-Keyknox-Hash"
-        const val VIRGIL_KEYKNOX_PREVIOUS_HASH_KEY = "Virgil-Keyknox-Previous-Hash"
+        const val VIRGIL_KEYKNOX_HASH_KEY = "virgil-keyknox-hash"
+        const val VIRGIL_KEYKNOX_PREVIOUS_HASH_KEY = "virgil-keyknox-previous-hash"
     }
 
 }

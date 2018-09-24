@@ -84,7 +84,7 @@ class HttpClient : HttpClientProtocol, Loggable {
                         urlConnection.headerFields?.keys?.filterNotNull()?.forEach { key ->
                             val value = urlConnection.headerFields[key]
                             value?.let {
-                                headerFields[key] = value.first()
+                                headerFields[key.toLowerCase()] = value.first()
                             }
                         }
                         return Response(responseBody, headerFields)

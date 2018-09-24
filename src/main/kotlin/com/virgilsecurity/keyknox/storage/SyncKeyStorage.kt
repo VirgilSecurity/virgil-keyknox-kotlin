@@ -50,7 +50,7 @@ class SyncKeyStorage {
 
     val identity: String
     val cloudKeyStorage: CloudKeyStorageProtocol
-    private lateinit var keyStorage: KeyStorageWrapper
+    private var keyStorage: KeyStorageWrapper
     private val keychainUtils = KeychainUtils()
 
     /**
@@ -106,8 +106,8 @@ class SyncKeyStorage {
             throw CloudEntryNotFoundWhileUpdatingException()
         }
         val cloudEntry = this.cloudKeyStorage.update(name, data, meta)
-        val meta = this.keychainUtils.createMetaForKeychain(cloudEntry)
-        this.keyStorage.update(name, data, meta)
+        val newMeta = this.keychainUtils.createMetaForKeychain(cloudEntry)
+        this.keyStorage.update(name, data, newMeta)
     }
 
     /**
@@ -288,7 +288,7 @@ class SyncKeyStorage {
             val cloudEntry = this.cloudKeyStorage.retrieve(name)
 
             val meta = this.keychainUtils.createMetaForKeychain(cloudEntry)
-            this.keyStorage.store(cloudEntry.name, cloudEntry.data!!, meta)
+            this.keyStorage.store(cloudEntry.name, cloudEntry.data, meta)
         }
     }
 
@@ -302,7 +302,7 @@ class SyncKeyStorage {
 
             if (keychainDate.second < cloudEntry.modificationDate) {
                 val meta = this.keychainUtils.createMetaForKeychain(cloudEntry)
-                this.keyStorage.update(cloudEntry.name, cloudEntry.data!!, meta)
+                this.keyStorage.update(cloudEntry.name, cloudEntry.data, meta)
             }
         }
     }

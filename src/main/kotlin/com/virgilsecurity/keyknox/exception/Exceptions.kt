@@ -49,7 +49,7 @@ class EmptyPublicKeysException(message: String? = "Public keys collection should
 
 open class KeyknoxException(message: String? = "Unknown error") : Exception(message)
 open class KeyknoxServerException(message: String? = "Unknown error") : KeyknoxException(message)
-open class KeyknoxServiceException(responseCode: Int, errorCode: Int = -1, message: String? = "Unknown error") : KeyknoxServerException(message)
+open class KeyknoxServiceException(val responseCode: Int, val errorCode: Int = -1, message: String? = "Unknown error") : KeyknoxServerException(message)
 
 class TamperedServerResponseException(message: String? = "Server returned a tampered value") : KeyknoxServerException(message)
 

@@ -37,6 +37,7 @@ package com.virgilsecurity.keyknox
 import com.virgilsecurity.keyknox.client.KeyknoxClientProtocol
 import com.virgilsecurity.keyknox.crypto.KeyknoxCryptoProtocol
 import com.virgilsecurity.keyknox.exception.EmptyPublicKeysException
+import com.virgilsecurity.keyknox.exception.KeyknoxServiceException
 import com.virgilsecurity.keyknox.exception.TamperedServerResponseException
 import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
 import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
@@ -69,37 +70,48 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
      * @param previousHash previous hash value.
      */
     fun pushValue(value: ByteArray, previousHash: ByteArray?): DecryptedKeyknoxValue {
-        val tokenContext = TokenContext("put", retryOnUnauthorized, "keyknox")
-        val token = this.accessTokenProvider.getToken(tokenContext)
-        val encryptedValue = this.crypto.encrypt(value, this.privateKey, this.publicKeys)
-        val response = this.keyknoxClient.pushValue(encryptedValue.first, encryptedValue.second, previousHash, token.stringRepresentation())
-        verifyServerResponse(encryptedValue, response)
-        return this.crypto.decrypt(response, this.privateKey, this.publicKeys)
+        val operation = { b: Boolean ->
+            val tokenContext = TokenContext("put", b, "keyknox")
+            val token = this.accessTokenProvider.getToken(tokenContext)
+            val encryptedValue = this.crypto.encrypt(value, this.privateKey, this.publicKeys)
+            val response = this.keyknoxClient.pushValue(encryptedValue.first, encryptedValue.second, previousHash, token.stringRepresentation())
+            verifyServerResponse(encryptedValue, response)
+            this.crypto.decrypt(response, this.privateKey, this.publicKeys)
+        }
+
+        return run(operation)
     }
 
     /**
      * Pull value, decrypt then verify signature.
      */
     fun pullValue(): DecryptedKeyknoxValue {
-        val tokenContext = TokenContext("get", retryOnUnauthorized, "keyknox")
-        val token = this.accessTokenProvider.getToken(tokenContext)
-        val response = this.keyknoxClient.pullValue(token.stringRepresentation())
-        return this.crypto.decrypt(response, this.privateKey, this.publicKeys)
+        val operation = { b: Boolean ->
+            val tokenContext = TokenContext("get", b, "keyknox")
+            val token = this.accessTokenProvider.getToken(tokenContext)
+            val response = this.keyknoxClient.pullValue(token.stringRepresentation())
+            this.crypto.decrypt(response, this.privateKey, this.publicKeys)
+        }
+        return run(operation)
     }
 
     /**
      * Resets Keyknox value (makes it empty). Also increments version
      */
     fun resetValue(): DecryptedKeyknoxValue {
-        val tokenContext = TokenContext("delete", retryOnUnauthorized, "keyknox")
-        val token = this.accessTokenProvider.getToken(tokenContext)
-        val response = this.keyknoxClient.resetValue(token.stringRepresentation())
+        val operation = { b: Boolean ->
+            val tokenContext = TokenContext("delete", b, "keyknox")
+            val token = this.accessTokenProvider.getToken(tokenContext)
+            val response = this.keyknoxClient.resetValue(token.stringRepresentation())
 
-        if ((response.meta == null || response.meta.isEmpty())
-                && (response.value == null || response.value.isEmpty())) {
-            return response
+            if ((response.meta == null || response.meta.isEmpty())
+                    && (response.value == null || response.value.isEmpty())) {
+                response
+            } else {
+                throw TamperedServerResponseException()
+            }
         }
-        throw TamperedServerResponseException()
+        return run(operation)
     }
 
     /**
@@ -119,11 +131,13 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
         }
         val tmpPrivateKey = newPrivateKey ?: this.privateKey
 
-        val tokenContext = TokenContext("put", retryOnUnauthorized, "keyknox")
-        val token = this.accessTokenProvider.getToken(tokenContext)
-        val pulledValue = this.keyknoxClient.pullValue(token.stringRepresentation())
+        val pullOperation = { b: Boolean ->
+            val tokenContext = TokenContext("get", b, "keyknox")
+            val token = this.accessTokenProvider.getToken(tokenContext)
+            this.keyknoxClient.pullValue(token.stringRepresentation())
+        }
+        val pulledValue = run(pullOperation)
         val decryptedValue = this.crypto.decrypt(pulledValue, this.privateKey, this.publicKeys)
-
 
         if (decryptedValue.meta == null || decryptedValue.meta.isEmpty() || decryptedValue.value == null || decryptedValue.value.isEmpty()) {
             // Empty data, no need to reencrypt anything
@@ -132,11 +146,16 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
 
         this.privateKey = tmpPrivateKey
         this.publicKeys = tmpPublicKeys
+        val encryptedValue = this.crypto.encrypt(decryptedValue.value, tmpPrivateKey, tmpPublicKeys)
 
-        val encryptedValue = this.crypto.encrypt(decryptedValue.value!!, tmpPrivateKey, tmpPublicKeys)
-        val response = this.keyknoxClient.pushValue(encryptedValue.first, encryptedValue.second, pulledValue.keyknoxHash, token.stringRepresentation())
-        verifyServerResponse(encryptedValue, response)
-        return this.crypto.decrypt(response, this.privateKey, this.publicKeys)
+        val pushOperation = { b: Boolean ->
+            val tokenContext = TokenContext("put", b, "keyknox")
+            val token = this.accessTokenProvider.getToken(tokenContext)
+            val response = this.keyknoxClient.pushValue(encryptedValue.first, encryptedValue.second, pulledValue.keyknoxHash, token.stringRepresentation())
+            verifyServerResponse(encryptedValue, response)
+            this.crypto.decrypt(response, this.privateKey, this.publicKeys)
+        }
+        return run(pushOperation)
     }
 
     /**
@@ -157,22 +176,23 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
             throw EmptyPublicKeysException()
         }
         val tmpPrivateKey = newPrivateKey ?: this.privateKey
-
-        val tokenContext = TokenContext("put", retryOnUnauthorized, "keyknox")
-        val token = this.accessTokenProvider.getToken(tokenContext)
-        val encryptedValue: Pair<ByteArray, ByteArray>
-        if (value == null) {
-            encryptedValue = this.crypto.encrypt(byteArrayOf(), tmpPrivateKey, tmpPublicKeys)
+        val encryptedValue: Pair<ByteArray, ByteArray> = if (value == null) {
+            this.crypto.encrypt(byteArrayOf(), tmpPrivateKey, tmpPublicKeys)
         } else {
-            encryptedValue = this.crypto.encrypt(value, tmpPrivateKey, tmpPublicKeys)
+            this.crypto.encrypt(value, tmpPrivateKey, tmpPublicKeys)
         }
 
         this.privateKey = tmpPrivateKey
         this.publicKeys = tmpPublicKeys
 
-        val response = this.keyknoxClient.pushValue(encryptedValue.first, encryptedValue.second, previousHash, token.stringRepresentation())
-        verifyServerResponse(encryptedValue, response)
-        return this.crypto.decrypt(response, this.privateKey, this.publicKeys)
+        val operation = { b: Boolean ->
+            val tokenContext = TokenContext("put", b, "keyknox")
+            val token = this.accessTokenProvider.getToken(tokenContext)
+            val response = this.keyknoxClient.pushValue(encryptedValue.first, encryptedValue.second, previousHash, token.stringRepresentation())
+            verifyServerResponse(encryptedValue, response)
+            this.crypto.decrypt(response, this.privateKey, this.publicKeys)
+        }
+        return run(operation)
     }
 
     private fun verifyServerResponse(encryptedValue: Pair<ByteArray, ByteArray>, response: EncryptedKeyknoxValue) {
@@ -181,6 +201,18 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
         }
         if (!Arrays.equals(encryptedValue.second, response.value)) {
             throw TamperedServerResponseException("Response value is tampered")
+        }
+    }
+
+    private fun <R> run(f: (Boolean) -> R): R {
+        return try {
+            f(false)
+        } catch (e: KeyknoxServiceException) {
+            if (this.retryOnUnauthorized && e.responseCode == 401) {
+                f(true)
+            } else {
+                throw e
+            }
         }
     }
 

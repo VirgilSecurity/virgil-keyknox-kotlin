@@ -45,8 +45,8 @@ class KeychainUtils {
     fun createMetaForKeychain(cloudEntry: CloudEntry): Map<String, String> {
         val meta = mutableMapOf<String, String>()
 
-        meta[KEYKNOX_META_CREATION_DATE_KEY] = cloudEntry.creationDate?.time.toString()
-        meta[KEYKNOX_META_MODIFICATION_DATE_KEY] = cloudEntry.modificationDate?.time.toString()
+        meta[KEYKNOX_META_CREATION_DATE_KEY] = cloudEntry.creationDate.time.toString()
+        meta[KEYKNOX_META_MODIFICATION_DATE_KEY] = cloudEntry.modificationDate.time.toString()
         meta.putAll(cloudEntry.meta)
 
         return meta
