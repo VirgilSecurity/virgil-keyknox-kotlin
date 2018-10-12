@@ -37,7 +37,7 @@ import com.virgilsecurity.sdk.utils.Base64
 import com.virgilsecurity.sdk.utils.ConvertionUtils
 import java.util.*
 import java.util.logging.Logger
-import kotlin.reflect.full.companionObject
+//import kotlin.reflect.full.companionObject
 
 inline fun base64Encode(array: ByteArray) = Base64.encode(array)
 
@@ -62,7 +62,7 @@ fun <R : Any> R.logger(): Lazy<Logger> {
  */
 fun <T : Any> unwrapCompanionClass(ofClass: Class<T>): Class<*> {
     return ofClass.enclosingClass?.takeIf {
-        ofClass.enclosingClass.kotlin.companionObject?.java == ofClass
+        ofClass.enclosingClass.kotlin.java == ofClass
     } ?: ofClass
 }
 

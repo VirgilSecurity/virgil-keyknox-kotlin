@@ -50,7 +50,7 @@ class SerializerTest {
     @Test
     fun date_serialize() {
         val entry = CloudEntry(name, data, date, date)
-        val entryStr = Serializer.klaxon.toJsonString(entry)
+        val entryStr = Serializer.gson.toJson(entry)
         val json = JsonParser().parse(entryStr) as JsonObject
 
         assertEquals(name, json["name"].asString)
@@ -72,7 +72,7 @@ class SerializerTest {
         meta.addProperty("k2", "Virgil")
         json.add("meta", meta)
 
-        val entry = Serializer.klaxon.parse<CloudEntry>(json.toString())
+        val entry = Serializer.gson.fromJson(json.toString(), CloudEntry::class.java)
         assertNotNull(entry)
         assertEquals(name, entry!!.name)
         assertArrayEquals(this.data, entry.data)

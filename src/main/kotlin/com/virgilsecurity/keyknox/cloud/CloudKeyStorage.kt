@@ -242,7 +242,7 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
             return arrayListOf()
         }
         val json = ConvertionUtils.toString(data)
-        val cloudEntries = Serializer.klaxon.parse<CloudEntries>(json)
+        val cloudEntries = Serializer.gson.fromJson(json, CloudEntries::class.java)
 
         return cloudEntries?.values?.toMutableList() ?: mutableListOf()
     }
@@ -252,7 +252,7 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
         cloudEntries.forEach { entry ->
             map[entry.name] = entry
         }
-        val json = Serializer.klaxon.toJsonString(CloudEntries(map))
+        val json = Serializer.gson.toJson(CloudEntries(map))
         return ConvertionUtils.toBytes(json)
     }
 

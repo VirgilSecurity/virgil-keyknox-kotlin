@@ -59,7 +59,7 @@ class HttpClient : HttpClientProtocol, Loggable {
                 val bodyStr = if (body is JsonObject) {
                     body.toString()
                 } else {
-                    Serializer.klaxon.toJsonString(body)
+                    Serializer.gson.toJson(body)
                 }
                 urlConnection.outputStream.write(ConvertionUtils.toBytes(bodyStr))
                 urlConnection.outputStream.flush()

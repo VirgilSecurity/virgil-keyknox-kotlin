@@ -33,10 +33,58 @@
 
 package com.virgilsecurity.keyknox
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+
+
+
 class TestUtils {
+
     companion object {
         fun pause() {
             Thread.sleep(2000)
+        }
+
+        fun compareJson(json1: JsonElement?, json2: JsonElement?): Boolean {
+            var isEqual = true
+            // Check whether both jsonElement are not null
+            if (json1 != null && json2 != null) {
+
+                // Check whether both jsonElement are objects
+                if (json1.isJsonObject && json2.isJsonObject) {
+                    val ens1 = (json1 as JsonObject).entrySet()
+                    val ens2 = (json2 as JsonObject).entrySet()
+                    val json2obj = json2 as JsonObject?
+                    if (ens1 != null && ens2 != null && ens2.size == ens1.size) {
+                        // Iterate JSON Elements with Key values
+                        for ((key, value) in ens1) {
+                            isEqual = isEqual && compareJson(value, json2obj!!.get(key))
+                        }
+                    } else {
+                        return false
+                    }
+                } else if (json1.isJsonArray && json2.isJsonArray) {
+                    val jarr1 = json1.asJsonArray
+                    val jarr2 = json2.asJsonArray
+                    if (jarr1.size() != jarr2.size()) {
+                        return false
+                    } else {
+                        var i = 0
+                        // Iterate JSON Array to JSON Elements
+                        for (je in jarr1) {
+                            isEqual = isEqual && compareJson(je, jarr2.get(i))
+                            i++
+                        }
+                    }
+                } else return if (json1.isJsonNull && json2.isJsonNull) {
+                    true
+                } else if (json1.isJsonPrimitive && json2.isJsonPrimitive) {
+                    json1 == json2
+                } else {
+                    false
+                }
+            } else return json1 == null && json2 == null
+            return isEqual
         }
     }
 }

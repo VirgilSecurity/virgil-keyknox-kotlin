@@ -33,31 +33,29 @@
 
 package com.virgilsecurity.keyknox.model
 
-import com.beust.klaxon.Json
-import com.virgilsecurity.keyknox.utils.Base64EncodedArray
-import com.virgilsecurity.keyknox.utils.DateAsTimestamp
+import com.google.gson.annotations.SerializedName
 import java.util.*
 
 /**
  * Class representing entry in cloud.
  */
 data class CloudEntry @JvmOverloads constructor(
-        @Json(name = "name")
+        @SerializedName("name")
         val name: String,
 
-        @Json(name = "data")
-        @Base64EncodedArray
+        @SerializedName("data")
+//        @Base64EncodedArray
         val data: ByteArray,
 
-        @Json(name = "creation_date")
-        @DateAsTimestamp
+        @SerializedName("creation_date")
+//        @DateAsTimestamp
         val creationDate: Date,
 
-        @Json(name = "modification_date")
-        @DateAsTimestamp
+        @SerializedName("modification_date")
+//        @DateAsTimestamp
         val modificationDate: Date,
 
-        @Json(name = "meta")
+        @SerializedName("meta")
         var meta: Map<String, String> = mutableMapOf()) {
 
     override fun equals(other: Any?): Boolean {

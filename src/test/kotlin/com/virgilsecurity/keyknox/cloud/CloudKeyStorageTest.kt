@@ -33,10 +33,11 @@
 
 package com.virgilsecurity.keyknox.cloud
 
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.Parser
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.virgilsecurity.keyknox.KeyknoxManager
 import com.virgilsecurity.keyknox.TestConfig
+import com.virgilsecurity.keyknox.TestUtils
 import com.virgilsecurity.keyknox.client.KeyknoxClient
 import com.virgilsecurity.keyknox.crypto.KeyknoxCrypto
 import com.virgilsecurity.keyknox.crypto.KeyknoxCryptoProtocol
@@ -585,66 +586,67 @@ class CloudKeyStorageTest {
     @Test
     fun serializeEntries() {
         // KTC-17
-        val cloudJson = Parser().parse(StringBuilder(CloudKeyStorageTest::class.java.getResource("/cloud.json").readText())) as JsonObject
+        val cloudJson = JsonParser().parse(CloudKeyStorageTest::class.java.getResource("/cloud.json").readText()) as JsonObject
         val cloudKeyStorage = this.keyStorage as CloudKeyStorage
 
         // Create dictionary dict1 of CloudEntry instances using data in Cloud.json file
         val entriesArray = mutableListOf<CloudEntry>()
         val map = mutableMapOf<String, String>()
-        cloudJson.obj("kMeta1")?.forEach { key, value ->
-            map[key] = value as String
+        cloudJson.get("kMeta1")?.asJsonObject?.entrySet()?.forEach { entry ->
+            map[entry.key] = entry.value.asString
         }
-        entriesArray.add(CloudEntry(cloudJson.string("kName1")!!,
-                base64Decode(cloudJson.string("kData1")!!),
-                Date(cloudJson.long("kCreationDate1")!!),
-                Date(cloudJson.long("kModificationDate1")!!),
+        entriesArray.add(CloudEntry(cloudJson.get("kName1").asString!!,
+                base64Decode(cloudJson.get("kData1").asString!!),
+                Date(cloudJson.get("kCreationDate1").asLong!!),
+                Date(cloudJson.get("kModificationDate1").asLong!!),
                 map))
-        entriesArray.add(CloudEntry(cloudJson.string("kName2")!!,
-                base64Decode(cloudJson.string("kData2")!!),
-                Date(cloudJson.long("kCreationDate2")!!),
-                Date(cloudJson.long("kModificationDate2")!!)))
+        entriesArray.add(CloudEntry(cloudJson.get("kName2").asString!!,
+                base64Decode(cloudJson.get("kData2").asString!!),
+                Date(cloudJson.get("kCreationDate2").asLong!!),
+                Date(cloudJson.get("kModificationDate2").asLong!!)))
 
         val serializedEntries = cloudKeyStorage.serializeEntries(entriesArray)
         assertNotNull(serializedEntries)
 
-        val expectedJson = Parser().parse(StringBuilder(ConvertionUtils.base64ToString(cloudJson.string("kExpectedResult")))) as JsonObject
-        val actualJson = Parser().parse(StringBuilder(ConvertionUtils.toString(serializedEntries))) as JsonObject
+        val expectedJson = JsonParser().parse(ConvertionUtils.base64ToString(cloudJson.get("kExpectedResult").asString)) as JsonObject
+        val actualJson = JsonParser().parse(ConvertionUtils.toString(serializedEntries)) as JsonObject
 
-        assertEquals(expectedJson.size, actualJson.size)
-        assertEquals(expectedJson.obj("key1"), actualJson.obj("key1"))
-        assertEquals(expectedJson.obj("key2")?.string("name"),
-                actualJson.obj("key2")?.string("name"))
-        assertEquals(expectedJson.obj("key2")?.string("data"),
-                actualJson.obj("key2")?.string("data"))
-        assertEquals(expectedJson.obj("key2")?.long("creation_date"),
-                actualJson.obj("key2")?.long("creation_date"))
-        assertEquals(expectedJson.obj("key2")?.long("modification_date"),
-                actualJson.obj("key2")?.long("modification_date"))
-        assertTrue(actualJson.obj("key2")?.obj("meta")?.isEmpty()!!)
+        assertEquals(expectedJson.size(), actualJson.size())
+        assertEquals(expectedJson.get("key1").asJsonObject, actualJson.get("key1").asJsonObject)
+//        assertTrue(TestUtils.compareJson(expectedJson.get("key1").asJsonObject, actualJson.get("key1").asJsonObject))
+        assertEquals(expectedJson.get("key2").asJsonObject?.get("name")?.asString,
+                actualJson.get("key2").asJsonObject?.get("name")?.asString)
+        assertEquals(expectedJson.get("key2").asJsonObject?.get("data")?.asString,
+                actualJson.get("key2").asJsonObject?.get("data")?.asString)
+        assertEquals(expectedJson.get("key2").asJsonObject?.get("creation_date")?.asLong,
+                actualJson.get("key2").asJsonObject?.get("creation_date")?.asLong)
+        assertEquals(expectedJson.get("key2").asJsonObject?.get("modification_date")?.asLong,
+                actualJson.get("key2").asJsonObject?.get("modification_date")?.asLong)
+        assertEquals(0, actualJson.get("key2").asJsonObject?.get("meta")?.asJsonObject?.size())
     }
 
     @Test
     fun deserializeEntries() {
         // KTC-17
-        val cloudJson = Parser().parse(StringBuilder(CloudKeyStorageTest::class.java.getResource("/cloud.json").readText())) as JsonObject
+        val cloudJson = JsonParser().parse(CloudKeyStorageTest::class.java.getResource("/cloud.json").readText()) as JsonObject
         val cloudKeyStorage = this.keyStorage as CloudKeyStorage
 
-        val data = ConvertionUtils.base64ToBytes(cloudJson.string("kExpectedResult"))
+        val data = ConvertionUtils.base64ToBytes(cloudJson.get("kExpectedResult").asString)
         val entries = cloudKeyStorage.deserializeEntries(data)
         assertNotNull(entries)
         assertEquals(2, entries.size)
-        assertEquals(cloudJson.string("kData1"), base64Encode(entries[0].data))
-        assertEquals(cloudJson.string("kName1"), entries[0].name)
-        assertEquals(Date(cloudJson.long("kCreationDate1")!!), entries[0].creationDate)
-        assertEquals(Date(cloudJson.long("kModificationDate1")!!), entries[0].modificationDate)
+        assertEquals(cloudJson.get("kData1").asString, base64Encode(entries[0].data))
+        assertEquals(cloudJson.get("kName1").asString, entries[0].name)
+        assertEquals(Date(cloudJson.get("kCreationDate1").asLong!!), entries[0].creationDate)
+        assertEquals(Date(cloudJson.get("kModificationDate1").asLong!!), entries[0].modificationDate)
         assertNotNull(entries[0].meta)
-        cloudJson.obj("kMeta1")?.forEach { key, value ->
-            assertEquals(value, entries[0].meta[key])
+        cloudJson.get("kMeta1").asJsonObject?.entrySet()?.forEach { entry ->
+            assertEquals(entry.value.asString, entries[0].meta[entry.key])
         }
-        assertEquals(cloudJson.string("kData2"), base64Encode(entries[1].data))
-        assertEquals(cloudJson.string("kName2"), entries[1].name)
-        assertEquals(Date(cloudJson.long("kCreationDate2")!!), entries[1].creationDate)
-        assertEquals(Date(cloudJson.long("kModificationDate2")!!), entries[1].modificationDate)
+        assertEquals(cloudJson.get("kData2").asString, base64Encode(entries[1].data))
+        assertEquals(cloudJson.get("kName2").asString, entries[1].name)
+        assertEquals(Date(cloudJson.get("kCreationDate2").asLong!!), entries[1].creationDate)
+        assertEquals(Date(cloudJson.get("kModificationDate2").asLong!!), entries[1].modificationDate)
         assertNotNull(entries[1].meta)
     }
 

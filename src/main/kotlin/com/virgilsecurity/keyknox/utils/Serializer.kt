@@ -33,96 +33,120 @@
 
 package com.virgilsecurity.keyknox.utils
 
-import com.beust.klaxon.Converter
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.JsonValue
-import com.beust.klaxon.Klaxon
+import com.google.gson.*
 import com.virgilsecurity.keyknox.model.CloudEntries
 import com.virgilsecurity.keyknox.model.CloudEntry
+import java.lang.reflect.Type
 import java.util.*
 
 interface Serializer {
 
     companion object {
 
-        val klaxon: Klaxon by lazy {
-            val dateConverter = object : Converter {
-                override fun canConvert(cls: Class<*>): Boolean {
-                    return cls == Date::class.java
+        val gson: Gson by lazy {
+            val dateConverter = object : JsonSerializer<Date>, JsonDeserializer<Date> {
+
+                override fun serialize(date: Date?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement? {
+                    return if (date == null) {
+                        JsonNull.INSTANCE
+                    } else {
+                        JsonPrimitive(date.time)
+                    }
                 }
 
-                override fun fromJson(jv: JsonValue): Date {
-                    val value = jv.longValue
-                    return if (value != null) {
-                        Date(value)
+                override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): Date? {
+                    return if (json != null) {
+                        Date(json.asLong)
                     } else {
                         Date()
                     }
                 }
-
-                override fun toJson(value: Any): String {
-                    val date = value as Date
-                    return date.time.toString()
-                }
             }
-            val byteArrayConverter = object : Converter {
-                override fun canConvert(cls: Class<*>): Boolean {
-                    return cls == ByteArray::class.java
+
+            val byteArrayConverter = object : JsonSerializer<ByteArray>, JsonDeserializer<ByteArray> {
+                override fun serialize(array: ByteArray?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+                    return if (array == null) {
+                        JsonNull.INSTANCE
+                    } else {
+                        JsonPrimitive(base64Encode(array))
+                    }
                 }
 
-                override fun fromJson(jv: JsonValue): ByteArray {
-                    val value = jv.string
-                    return if (value != null) {
-                        base64Decode(value)
+                override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): ByteArray {
+                    return if (json != null) {
+                        base64Decode(json.asString)
                     } else {
                         byteArrayOf()
                     }
                 }
-
-                override fun toJson(value: Any): String {
-                    val array = value as ByteArray
-                    val base64Encoded = base64Encode(array)
-                    return "\"$base64Encoded\""
-                }
             }
 
-            val cloudEntriesConverter = object : Converter {
-                override fun canConvert(cls: Class<*>): Boolean {
-                    return cls == CloudEntries::class.java
+            val cloudEntriesConverter = object : JsonSerializer<CloudEntries>, JsonDeserializer<CloudEntries> {
+                override fun serialize(src: CloudEntries?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+                    val json = JsonObject()
+                    src as Map<*, *>
+                    src.entries.forEach { entry ->
+                        json.add(entry.key, gson.toJsonTree(entry.value))
+                    }
+                    return json
                 }
 
-                override fun fromJson(jv: JsonValue): CloudEntries {
+                override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): CloudEntries {
                     val map = mutableMapOf<String, CloudEntry>()
-                    jv.obj?.forEach { key, value ->
-                        value as JsonObject
-                        val entry = klaxon.parseFromJsonObject<CloudEntry>(value)
-                        if (entry != null) {
-                            if (entry.meta == null) {
-                                entry.meta = mutableMapOf()
-                            }
-                            map[key] = entry
+                    json?.asJsonObject?.entrySet()?.forEach { entry ->
+                        val cloudEntry = gson.fromJson(entry.value, CloudEntry::class.java)
+                        if (cloudEntry.meta == null) {
+                            cloudEntry.meta = mutableMapOf()
                         }
+                        map[entry.key] = cloudEntry
                     }
                     return CloudEntries(map)
                 }
-
-                override fun toJson(value: Any): String {
-                    fun joinToString(list: Collection<*>, open: String, close: String) = open + list.joinToString(", ") + close
-
-                    value as Map<*, *>
-                    val valueList = arrayListOf<String>()
-                    value.entries.forEach { entry ->
-                        val jsonValue = klaxon.toJsonString(entry.value as Any)
-                        valueList.add("\"${entry.key}\": $jsonValue")
-                    }
-                    return joinToString(valueList, "{", "}")
-                }
             }
 
-            val klaxon = Klaxon().converter(byteArrayConverter).converter(dateConverter).converter(cloudEntriesConverter)
-                    .fieldConverter(Base64EncodedArray::class, byteArrayConverter)
-                    .fieldConverter(DateAsTimestamp::class, dateConverter)
-            klaxon
+//
+//            val cloudEntriesConverter = object : Converter {
+//                override fun canConvert(cls: Class<*>): Boolean {
+//                    return cls == CloudEntries::class.java
+//                }
+//
+//                override fun fromJson(jv: JsonValue): CloudEntries {
+//                    val map = mutableMapOf<String, CloudEntry>()
+//                    jv.obj?.forEach { key, value ->
+//                        value as JsonObject
+//                        val entry = klaxon.parseFromJsonObject<CloudEntry>(value)
+//                        if (entry != null) {
+//                            if (entry.meta == null) {
+//                                entry.meta = mutableMapOf()
+//                            }
+//                            map[key] = entry
+//                        }
+//                    }
+//                    return CloudEntries(map)
+//                }
+//
+//                override fun toJson(value: Any): String {
+//                    fun joinToString(list: Collection<*>, open: String, close: String) = open + list.joinToString(", ") + close
+//
+//                    value as Map<*, *>
+//                    val valueList = arrayListOf<String>()
+//                    value.entries.forEach { entry ->
+//                        val jsonValue = klaxon.toJsonString(entry.value as Any)
+//                        valueList.add("\"${entry.key}\": $jsonValue")
+//                    }
+//                    return joinToString(valueList, "{", "}")
+//                }
+//            }
+//
+//            val klaxon = Klaxon().converter(byteArrayConverter).converter(dateConverter).converter(cloudEntriesConverter)
+//                    .fieldConverter(Base64EncodedArray::class, byteArrayConverter)
+//                    .fieldConverter(DateAsTimestamp::class, dateConverter)
+//            klaxon
+
+            val gson = GsonBuilder().registerTypeAdapter(Date::class.java, dateConverter)
+                    .registerTypeAdapter(ByteArray::class.java, byteArrayConverter)
+                    .registerTypeAdapter(CloudEntries::class.java, cloudEntriesConverter).disableHtmlEscaping().create()
+            gson
         }
 
     }
