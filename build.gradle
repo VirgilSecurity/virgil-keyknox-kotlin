@@ -58,11 +58,17 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+def APP_ID = hasProperty('APP_ID') ? APP_ID : System.getenv('APP_ID')
+def API_PRIVATE_KEY = hasProperty('API_PRIVATE_KEY') ? API_PRIVATE_KEY : System.getenv('API_PRIVATE_KEY')
+def API_PUBLIC_KEY = hasProperty('API_PUBLIC_KEY') ? API_PUBLIC_KEY : System.getenv('API_PUBLIC_KEY')
+def API_PUBLIC_KEY_ID = hasProperty('API_PUBLIC_KEY_ID') ? API_PUBLIC_KEY_ID : System.getenv('API_PUBLIC_KEY_ID')
+
 junitPlatformTest {
-    systemProperty 'APP_ID', System.getProperty('APP_ID')
-    systemProperty 'API_PRIVATE_KEY', System.getProperty('API_PRIVATE_KEY')
-    systemProperty 'API_PUBLIC_KEY', System.getProperty('API_PUBLIC_KEY')
-    systemProperty 'API_PUBLIC_KEY_ID', System.getProperty('API_PUBLIC_KEY_ID')
+    systemProperty 'APP_ID', APP_ID
+    System.println("VALUE IS: " + APP_ID)
+    systemProperty 'API_PRIVATE_KEY', API_PRIVATE_KEY
+    systemProperty 'API_PUBLIC_KEY', API_PUBLIC_KEY
+    systemProperty 'API_PUBLIC_KEY_ID', API_PUBLIC_KEY_ID
 }
 
 task sourcesJar(type: Jar) {
@@ -74,6 +80,9 @@ task javadocJar(type: Jar, dependsOn: 'dokka') {
     from "$buildDir/javadoc"
     classifier = 'javadoc'
 }
+
+def authentication_username = hasProperty('authentication_username') ? authentication_username : System.getenv('authentication_username')
+def authentication_password = hasProperty('authentication_password') ? authentication_password : System.getenv('authentication_password')
 
 publishing {
     publications {
@@ -114,8 +123,8 @@ publishing {
             def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
             credentials {
-//                username "${authentication_username}"
-//                password "${authentication_password}"
+                username "${authentication_username}"
+                password "${authentication_password}"
             }
         }
     }

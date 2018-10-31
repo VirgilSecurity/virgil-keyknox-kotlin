@@ -41,13 +41,33 @@ import com.virgilsecurity.sdk.crypto.VirgilPublicKey
 class TestConfig {
     companion object {
         val virgilCrypto = VirgilCrypto(false)
-        val appId = System.getProperty("APP_ID") //"54e071c5c1894aa889e31d6c7864fed5"
+        val appId: String by lazy {
+            if (System.getProperty("APP_ID") != null)
+                System.getProperty("APP_ID")
+            else
+                System.getenv("APP_ID")
+        }
         val apiKey: VirgilPrivateKey by lazy {
-            this.virgilCrypto.importPrivateKey(base64Decode(System.getProperty("API_PRIVATE_KEY")))
+            (if (System.getProperty("API_PRIVATE_KEY") != null)
+                System.getProperty("API_PRIVATE_KEY")
+            else
+                System.getenv("API_PRIVATE_KEY")).let {
+                this.virgilCrypto.importPrivateKey(base64Decode(it))
+            }
         }
         val apiPublicKey: VirgilPublicKey by lazy {
-            this.virgilCrypto.importPublicKey(base64Decode(System.getProperty("API_PUBLIC_KEY")))
+            (if (System.getProperty("API_PUBLIC_KEY") != null)
+                System.getProperty("API_PUBLIC_KEY")
+            else
+                System.getenv("API_PUBLIC_KEY")).let {
+                this.virgilCrypto.importPublicKey(base64Decode(it))
+            }
         }
-        val apiPublicKeyId = System.getProperty("API_PUBLIC_KEY_ID")
+        val apiPublicKeyId: String by lazy {
+            if (System.getProperty("API_PUBLIC_KEY_ID") != null)
+                System.getProperty("API_PUBLIC_KEY_ID")
+            else
+                System.getenv("API_PUBLIC_KEY_ID")
+        }
     }
 }
