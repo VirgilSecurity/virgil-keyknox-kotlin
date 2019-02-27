@@ -49,6 +49,18 @@ import java.net.URL
 import java.util.logging.Level
 
 class HttpClient : HttpClientProtocol, Loggable {
+
+    private val virgilAgentHeader: String
+
+    constructor() {
+        virgilAgentHeader =
+                "$VIRGIL_AGENT_PRODUCT;$VIRGIL_AGENT_FAMILY;${OsUtils.getOsAgentName()};${VersionVirgilAgent.VERSION}"
+    }
+
+    constructor(product: String, version: String) {
+        virgilAgentHeader = "$product;$VIRGIL_AGENT_FAMILY;${OsUtils.getOsAgentName()};$version"
+    }
+
     override fun send(url: URL, method: Method, accessToken: String, body: Any?, headers: Map<String, String>?): Response {
         try {
             logger().fine("${method.name} to $url")
@@ -119,7 +131,7 @@ class HttpClient : HttpClientProtocol, Loggable {
             urlConnection.setRequestProperty("Authorization", "Virgil $accessToken")
         }
         urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-        urlConnection.setRequestProperty(VIRGIL_AGENT_HEADER_KEY, VIRGIL_AGENT_HEADER)
+        urlConnection.setRequestProperty(VIRGIL_AGENT_HEADER_KEY, virgilAgentHeader)
 
         return urlConnection
     }
@@ -128,7 +140,5 @@ class HttpClient : HttpClientProtocol, Loggable {
         private const val VIRGIL_AGENT_HEADER_KEY = "virgil-agent"
         private const val VIRGIL_AGENT_PRODUCT = "keyknox"
         private const val VIRGIL_AGENT_FAMILY = "jvm"
-        @JvmStatic private val VIRGIL_AGENT_HEADER =
-                "$VIRGIL_AGENT_PRODUCT;$VIRGIL_AGENT_FAMILY;${OsUtils.getOsAgentName()};${VersionVirgilAgent.VERSION}"
     }
 }
