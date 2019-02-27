@@ -1,6 +1,39 @@
+/*
+ * Copyright (c) 2015-2019, Virgil Security, Inc.
+ *
+ * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *  
+ *     (1) Redistributions of source code must retain the above copyright notice, this
+ *     list of conditions and the following disclaimer.
+ *
+ *     (2) Redistributions in binary form must reproduce the above copyright notice,
+ *     this list of conditions and the following disclaimer in the documentation
+ *     and/or other materials provided with the distribution.
+ *
+ *     (3) Neither the name of virgil nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 buildscript {
     ext.versions = [
-            virgil_sdk: '5.0.4',
+            virgil_sdk: '5.0.7',
             kotlin: '1.3.0-rc-190',
             junit: '5.2.0',
             dokka: '0.9.17'
@@ -23,7 +56,7 @@ plugins {
 }
 
 group 'com.virgilsecurity'
-version '0.1.1'
+version '0.1.2'
 
 apply plugin: 'kotlin'
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -51,6 +84,26 @@ dependencies {
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
 }
 
+task generateVersionVirgilAgent {
+    outputs.dir "$buildDir/generated"
+    doFirst {
+        def versionFile = file("$buildDir/generated/com/virgilsecurity/passw0rd/build/VersionVirgilAgent.kt")
+        versionFile.parentFile.mkdirs()
+        versionFile.text =
+                """
+package com.virgilsecurity.passw0rd.build;
+
+object VersionVirgilAgent {
+    const val VERSION = "$project.version"
+}
+"""
+    }
+}
+
+sourceSets.main.java.srcDirs = ["${buildDir}/generated/", "src/main/kotlin"]
+
+compileKotlin.dependsOn(generateVersionVirgilAgent)
+
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
@@ -65,7 +118,6 @@ def API_PUBLIC_KEY_ID = hasProperty('API_PUBLIC_KEY_ID') ? API_PUBLIC_KEY_ID : S
 
 junitPlatformTest {
     systemProperty 'APP_ID', APP_ID
-    System.println("VALUE IS: " + APP_ID)
     systemProperty 'API_PRIVATE_KEY', API_PRIVATE_KEY
     systemProperty 'API_PUBLIC_KEY', API_PUBLIC_KEY
     systemProperty 'API_PUBLIC_KEY_ID', API_PUBLIC_KEY_ID

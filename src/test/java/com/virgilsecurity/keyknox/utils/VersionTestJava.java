@@ -31,48 +31,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.virgilsecurity.keyknox.crypto
+package com.virgilsecurity.keyknox.utils;
 
-import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
-import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
-import com.virgilsecurity.sdk.crypto.PrivateKey
-import com.virgilsecurity.sdk.crypto.PublicKey
-import com.virgilsecurity.sdk.crypto.exceptions.CryptoException
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.virgilsecurity.passw0rd.build.VersionVirgilAgent;
+import org.junit.jupiter.api.Test;
 
-interface KeyknoxCryptoProtocol {
+/**
+ * VersionTestJava class.
+ */
+class VersionTestJava {
 
-    /**
-     * Encrypts data for Keyknox.
-     *
-     * @param data
-     * data to encrypt.
-     * @param privateKey
-     * private key to sign data. Should be of type [VirgilPrivateKey].
-     * @param publicKeys
-     * public keys to encrypt data. Should be of type VirgilPublicKey.
-     * @return meta information and encrypted blob.
-     * @throws KeyNotSupportedException
-     * if passed keys have wrong type.
-     * @throws CryptoException
-     * re-thrown from Cipher, Signer.
-     */
-    @Throws(CryptoException::class)
-    fun encrypt(data: ByteArray, privateKey: PrivateKey, publicKeys: List<PublicKey>): Pair<ByteArray, ByteArray>
+  private static final String CURRENT_VERSION = "0.1.2";
 
-    /**
-     * Decrypts EncryptedKeyknoxValue.
-     *
-     * @param encryptedKeyknoxValue
-     * encrypted value from Keyknox service.
-     * @param privateKey
-     * private key to decrypt data. Should be of type [VirgilPrivateKey].
-     * @param publicKeys
-     * allowed public keys to verify signature. Should be of type
-     * [VirgilPublicKey].
-     * @return the DecryptedKeyknoxValue.
-     */
-    @Throws(CryptoException::class)
-    fun decrypt(encryptedKeyknoxValue: EncryptedKeyknoxValue, privateKey: PrivateKey,
-                publicKeys: List<PublicKey>): DecryptedKeyknoxValue
+  @Test void version_test() {
+    String version = VersionVirgilAgent.VERSION;
+
+    assertEquals(CURRENT_VERSION, version);
+  }
 }
