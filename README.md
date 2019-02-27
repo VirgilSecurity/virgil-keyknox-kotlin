@@ -18,7 +18,7 @@ Virgil Keyknox Service allows users to store their sensitive data (such as Priva
 
 ### Installation
 
-Virgil Keyknox SDK is provided as a set of frameworks. These frameworks are distributed via Carthage and CocoaPods. Also in this guide, you find one more package called VirgilCrypto (Virgil Crypto Library) that is used by the SDK to perform cryptographic operations.
+Virgil Keyknox SDK is provided as a set of frameworks. These frameworks are distributed via Gradle and Maven. Also in this guide, you find one more package called VirgilCrypto (Virgil Crypto Library) that is used by the SDK to perform cryptographic operations.
 
 TheVirgil Keyknox SDK is provided as a package named com.virgilsecurity.keyknox. The package is distributed via Maven repository.
 
@@ -124,7 +124,7 @@ Our developer support team is here to help you. Find out more information on our
 
 You can find us on [Twitter](https://twitter.com/VirgilSecurity) or send us email support@VirgilSecurity.com.
 
-Also, get extra help from our support team on [Slack](https://virgilsecurity.slack.com/join/shared_invite/enQtMjg4MDE4ODM3ODA4LTc2OWQwOTQ3YjNhNTQ0ZjJiZDc2NjkzYjYxNTI0YzhmNTY2ZDliMGJjYWQ5YmZiOGU5ZWEzNmJiMWZhYWVmYTM).
+Also, get extra help from our support team on [Slack](https://virgilsecurity.com/join-community).
 
 [_virgil_crypto]: https://github.com/VirgilSecurity/virgil-crypto
 [_virgil_sdk]: https://github.com/VirgilSecurity/virgil-sdk-java-android
