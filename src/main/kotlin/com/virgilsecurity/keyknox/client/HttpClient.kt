@@ -36,7 +36,9 @@ package com.virgilsecurity.keyknox.client
 import com.google.gson.JsonObject
 import com.virgilsecurity.keyknox.exception.KeyknoxServiceException
 import com.virgilsecurity.keyknox.utils.Loggable
+import com.virgilsecurity.keyknox.utils.OsUtils
 import com.virgilsecurity.keyknox.utils.Serializer
+import com.virgilsecurity.passw0rd.build.VersionVirgilAgent
 import com.virgilsecurity.sdk.common.ErrorResponse
 import com.virgilsecurity.sdk.utils.ConvertionUtils
 import com.virgilsecurity.sdk.utils.StringUtils
@@ -117,7 +119,16 @@ class HttpClient : HttpClientProtocol, Loggable {
             urlConnection.setRequestProperty("Authorization", "Virgil $accessToken")
         }
         urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+        urlConnection.setRequestProperty(VIRGIL_AGENT_HEADER_KEY, VIRGIL_AGENT_HEADER)
 
         return urlConnection
+    }
+
+    companion object {
+        private const val VIRGIL_AGENT_HEADER_KEY = "virgil-agent"
+        private const val VIRGIL_AGENT_PRODUCT = "keyknox"
+        private const val VIRGIL_AGENT_FAMILY = "jvm"
+        @JvmStatic private val VIRGIL_AGENT_HEADER =
+                "$VIRGIL_AGENT_PRODUCT;$VIRGIL_AGENT_FAMILY;${OsUtils.osAgentName};${VersionVirgilAgent.VERSION}"
     }
 }
