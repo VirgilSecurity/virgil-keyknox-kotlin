@@ -87,11 +87,11 @@ dependencies {
 task generateVersionVirgilAgent {
     outputs.dir "$buildDir/generated"
     doFirst {
-        def versionFile = file("$buildDir/generated/com/virgilsecurity/passw0rd/build/VersionVirgilAgent.kt")
+        def versionFile = file("$buildDir/generated/com/virgilsecurity/keyknox/build/VersionVirgilAgent.kt")
         versionFile.parentFile.mkdirs()
         versionFile.text =
                 """
-package com.virgilsecurity.passw0rd.build;
+package com.virgilsecurity.keyknox.build;
 
 object VersionVirgilAgent {
     const val VERSION = "$project.version"
