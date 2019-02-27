@@ -48,15 +48,10 @@ import java.net.URL
  *
  * @author Andrii Iakovenko
  */
-class KeyknoxClient : KeyknoxClientProtocol {
-
-    val serviceUrl: URL
-    val httpClient: HttpClientProtocol
-
-    constructor(serviceUrl: URL = URL("https://api.virgilsecurity.com")) {
-        this.serviceUrl = serviceUrl
-        this.httpClient = HttpClient()
-    }
+class KeyknoxClient @JvmOverloads constructor(
+        val serviceUrl: URL = URL("https://api.virgilsecurity.com"),
+        val httpClient: HttpClientProtocol = HttpClient()
+) : KeyknoxClientProtocol {
 
     override fun pushValue(meta: ByteArray, value: ByteArray, previousHash: ByteArray?, token: String): EncryptedKeyknoxValue {
         val url = URL(this.serviceUrl, "keyknox/v1")
