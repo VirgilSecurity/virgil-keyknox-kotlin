@@ -31,48 +31,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.virgilsecurity.keyknox.crypto
+package com.virgilsecurity.keyknox.utils;
 
-import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
-import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
-import com.virgilsecurity.sdk.crypto.PrivateKey
-import com.virgilsecurity.sdk.crypto.PublicKey
-import com.virgilsecurity.sdk.crypto.exceptions.CryptoException
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import com.virgilsecurity.sdk.utils.OsUtils;
+import org.junit.jupiter.api.Test;
+
+/**
+ * OsUtilsTest class.
+ */
+class OsUtilsTest {
+
+  private static final String ANDROID_OS_NAME = "android";
+  private static final String LINUX_OS_NAME = "linux";
+  private static final String WINDOWS_OS_NAME = "windows";
+  private static final String MACOS_OS_NAME = "mac os";
+  private static final String VIRGIL_AGENT_MACOS = "darwin";
+  private static final String UNKNOWN_OS = "unknown";
 
 
-interface KeyknoxCryptoProtocol {
+  @Test void test_os_type() {
+    Class androidClass = null;
+    try {
+      androidClass = Class.forName("android.os.Build");
+    } catch (ClassNotFoundException e) {
+      // Leave androidClass as null
+    }
 
-    /**
-     * Encrypts data for Keyknox.
-     *
-     * @param data
-     * data to encrypt.
-     * @param privateKey
-     * private key to sign data. Should be of type [VirgilPrivateKey].
-     * @param publicKeys
-     * public keys to encrypt data. Should be of type VirgilPublicKey.
-     * @return meta information and encrypted blob.
-     * @throws KeyNotSupportedException
-     * if passed keys have wrong type.
-     * @throws CryptoException
-     * re-thrown from Cipher, Signer.
-     */
-    @Throws(CryptoException::class)
-    fun encrypt(data: ByteArray, privateKey: PrivateKey, publicKeys: List<PublicKey>): Pair<ByteArray, ByteArray>
+    if (androidClass != null) {
+      assertEquals(ANDROID_OS_NAME, OsUtils.getOsAgentName());
+      return;
+    }
 
-    /**
-     * Decrypts EncryptedKeyknoxValue.
-     *
-     * @param encryptedKeyknoxValue
-     * encrypted value from Keyknox service.
-     * @param privateKey
-     * private key to decrypt data. Should be of type [VirgilPrivateKey].
-     * @param publicKeys
-     * allowed public keys to verify signature. Should be of type
-     * [VirgilPublicKey].
-     * @return the DecryptedKeyknoxValue.
-     */
-    @Throws(CryptoException::class)
-    fun decrypt(encryptedKeyknoxValue: EncryptedKeyknoxValue, privateKey: PrivateKey,
-                publicKeys: List<PublicKey>): DecryptedKeyknoxValue
+    String osName = System.getProperty("os.name").toLowerCase();
+
+    if (osName.startsWith(LINUX_OS_NAME)) {
+      assertEquals(LINUX_OS_NAME, OsUtils.getOsAgentName());
+    } else if (osName.startsWith(WINDOWS_OS_NAME)) {
+      assertEquals(WINDOWS_OS_NAME, OsUtils.getOsAgentName());
+    } else if (osName.startsWith(MACOS_OS_NAME)) {
+      assertEquals(VIRGIL_AGENT_MACOS, OsUtils.getOsAgentName());
+    } else {
+      assertEquals(UNKNOWN_OS, OsUtils.getOsAgentName());
+    }
+  }
 }
