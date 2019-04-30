@@ -74,7 +74,7 @@ class SyncKeyStorageTests {
     fun setup() {
         this.virgilCrypto = VirgilCrypto(false)
 
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
         this.privateKey = keyPair.privateKey
         this.publicKey = keyPair.publicKey
 
@@ -288,8 +288,8 @@ class SyncKeyStorageTests {
         val name = UUID.randomUUID().toString()
         val data = ConvertionUtils.toBytes(UUID.randomUUID().toString())
 
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
-        val newPublicKeys = arrayListOf(keyPair.publicKey, this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519).publicKey)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
+        val newPublicKeys = arrayListOf(keyPair.publicKey, this.virgilCrypto.generateKeyPair(KeyType.ED25519).publicKey)
         val newPrivateKey = keyPair.privateKey
 
         this.syncKeyStorage.sync()
@@ -505,7 +505,7 @@ class SyncKeyStorageTests {
         }
 
         try {
-            val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+            val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
             this.syncKeyStorage.updateRecipients(arrayListOf(keyPair.publicKey), keyPair.privateKey)
             fail<String>("Storage should be out of sync")
         } catch (e: CloudStorageOutOfSyncException) {
@@ -514,7 +514,7 @@ class SyncKeyStorageTests {
 
     @Test
     fun conversation() {
-        val keyPair2 = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair2 = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
         val privateKey2 = keyPair2.privateKey
         val publicKey2 = keyPair2.publicKey
 
@@ -528,7 +528,7 @@ class SyncKeyStorageTests {
         var syncKeyStorage2 = SyncKeyStorage(identity = this.identity, keyStorage = keyStorage, cloudKeyStorage = CloudKeyStorage(keyknoxManager))
 
         val name = UUID.randomUUID().toString()
-        val data = publicKey2.rawKey
+        val data = publicKey2.publicKey.exportPublicKey()
 
         syncKeyStorage.sync()
         syncKeyStorage.store(name, data)

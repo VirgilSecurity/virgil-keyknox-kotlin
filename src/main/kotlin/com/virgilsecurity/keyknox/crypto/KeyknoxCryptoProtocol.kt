@@ -35,44 +35,43 @@ package com.virgilsecurity.keyknox.crypto
 
 import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
 import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
-import com.virgilsecurity.sdk.crypto.PrivateKey
-import com.virgilsecurity.sdk.crypto.PublicKey
+import com.virgilsecurity.sdk.crypto.VirgilPrivateKey
+import com.virgilsecurity.sdk.crypto.VirgilPublicKey
 import com.virgilsecurity.sdk.crypto.exceptions.CryptoException
-
 
 interface KeyknoxCryptoProtocol {
 
     /**
      * Encrypts data for Keyknox.
      *
-     * @param data
-     * data to encrypt.
-     * @param privateKey
-     * private key to sign data. Should be of type [VirgilPrivateKey].
-     * @param publicKeys
-     * public keys to encrypt data. Should be of type VirgilPublicKey.
-     * @return meta information and encrypted blob.
-     * @throws KeyNotSupportedException
-     * if passed keys have wrong type.
-     * @throws CryptoException
-     * re-thrown from Cipher, Signer.
+     * @param data Data to encrypt.
+     * @param privateKey Private key to sign data. Should be of type [VirgilPrivateKey].
+     * @param publicKeys Public keys to encrypt data. Should be of type VirgilPublicKey.
+     *
+     * @return Meta information and encrypted blob.
+     *
+     * @throws CryptoException Re-thrown from Cipher, Signer.
+     * @throws IllegalArgumentException If some of provided arguments is empty.
      */
-    @Throws(CryptoException::class)
-    fun encrypt(data: ByteArray, privateKey: PrivateKey, publicKeys: List<PublicKey>): Pair<ByteArray, ByteArray>
+    @Throws(CryptoException::class, IllegalArgumentException::class)
+    fun encrypt(data: ByteArray,
+                privateKey: VirgilPrivateKey,
+                publicKeys: List<VirgilPublicKey>): Pair<ByteArray, ByteArray>
 
     /**
      * Decrypts EncryptedKeyknoxValue.
      *
-     * @param encryptedKeyknoxValue
-     * encrypted value from Keyknox service.
-     * @param privateKey
-     * private key to decrypt data. Should be of type [VirgilPrivateKey].
-     * @param publicKeys
-     * allowed public keys to verify signature. Should be of type
-     * [VirgilPublicKey].
-     * @return the DecryptedKeyknoxValue.
+     * @param encryptedKeyknoxValue Encrypted value from Keyknox service.
+     * @param privateKey Private key to decrypt data. Should be of type [VirgilPrivateKey].
+     * @param publicKeys Allowed public keys to verify signature. Should be of type [VirgilPublicKey].
+     *
+     * @return The DecryptedKeyknoxValue.
+     *
+     * @throws CryptoException Re-thrown from Cipher, Signer.
+     * @throws IllegalArgumentException If some of provided arguments is empty.
      */
-    @Throws(CryptoException::class)
-    fun decrypt(encryptedKeyknoxValue: EncryptedKeyknoxValue, privateKey: PrivateKey,
-                publicKeys: List<PublicKey>): DecryptedKeyknoxValue
+    @Throws(CryptoException::class, IllegalArgumentException::class)
+    fun decrypt(encryptedKeyknoxValue: EncryptedKeyknoxValue,
+                privateKey: VirgilPrivateKey,
+                publicKeys: List<VirgilPublicKey>): DecryptedKeyknoxValue
 }

@@ -33,126 +33,122 @@
 
 package com.virgilsecurity.keyknox.crypto
 
-import com.virgilsecurity.crypto.VirgilCipher
-import com.virgilsecurity.crypto.VirgilHash.Algorithm
-import com.virgilsecurity.crypto.VirgilSigner
-import com.virgilsecurity.keyknox.exception.*
+import com.virgilsecurity.crypto.foundation.Aes256Gcm
+import com.virgilsecurity.crypto.foundation.RecipientCipher
+import com.virgilsecurity.keyknox.exception.DecryptionFailedException
+import com.virgilsecurity.keyknox.exception.SignatureVerificationException
+import com.virgilsecurity.keyknox.exception.SignerNotFoundException
 import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
 import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
-import com.virgilsecurity.sdk.crypto.*
+import com.virgilsecurity.keyknox.utils.requires
+import com.virgilsecurity.sdk.crypto.VirgilCrypto
+import com.virgilsecurity.sdk.crypto.VirgilPrivateKey
+import com.virgilsecurity.sdk.crypto.VirgilPublicKey
 import com.virgilsecurity.sdk.crypto.exceptions.CryptoException
-import com.virgilsecurity.sdk.crypto.exceptions.KeyNotSupportedException
+import java.util.*
 
 class KeyknoxCrypto : KeyknoxCryptoProtocol {
 
     private val crypto: VirgilCrypto = VirgilCrypto(false)
 
-    @Throws(CryptoException::class)
-    override fun encrypt(data: ByteArray, privateKey: PrivateKey,
-                         publicKeys: List<PublicKey>): Pair<ByteArray, ByteArray> {
-        verifyPrivateKey(privateKey)
-        verifyPublicKeys(publicKeys)
+    @Throws(CryptoException::class, IllegalArgumentException::class)
+    override fun encrypt(data: ByteArray,
+                         privateKey: VirgilPrivateKey,
+                         publicKeys: List<VirgilPublicKey>): Pair<ByteArray, ByteArray> {
 
-        val virgilPrivateKey = privateKey as VirgilPrivateKey
+        requires(data.isNotEmpty(), "data")
+        requires(publicKeys.isNotEmpty(), "privateKey")
 
-        VirgilSigner(Algorithm.SHA512).use({ signer ->
-            VirgilCipher().use({ cipher ->
-                val privateKeyData = this.crypto.exportPrivateKey(virgilPrivateKey)
-                val signature = signer.sign(data, privateKeyData)
+        val signature = crypto.generateSignature(data, privateKey)
 
-                val customData = cipher.customParams()
-                customData.setData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID, virgilPrivateKey.identifier)
-                customData.setData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE, signature)
+        Aes256Gcm().use { aesGcm ->
+            RecipientCipher().use { cipher ->
+                cipher.setEncryptionCipher(aesGcm)
+                cipher.setRandom(crypto.rng)
 
-                for (publicKey in publicKeys) {
-                    val virgilPublicKey = publicKey as VirgilPublicKey
-                    val virgilPublicKeyData = this.crypto.exportPublicKey(virgilPublicKey)
-                    cipher.addKeyRecipient(virgilPublicKey.identifier, virgilPublicKeyData)
+                publicKeys.forEach {
+                    cipher.addKeyRecipient(it.identifier, it.publicKey)
                 }
 
-                val encryptedData = cipher.encrypt(data, false)
-                val meta = cipher.contentInfo
+                cipher.customParams().addData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID, privateKey.identifier)
+                cipher.customParams().addData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE, signature)
+
+                cipher.startEncryption()
+                val meta = cipher.packMessageInfo()
+                var encryptedData = cipher.processEncryption(data)
+                encryptedData += cipher.finishEncryption()
 
                 return Pair(meta, encryptedData)
-            })
-        })
+            }
+        }
     }
 
-    @Throws(CryptoException::class)
+    @Throws(CryptoException::class, IllegalArgumentException::class)
     override fun decrypt(encryptedKeyknoxValue: EncryptedKeyknoxValue,
-                         privateKey: PrivateKey, publicKeys: List<PublicKey>): DecryptedKeyknoxValue {
+                         privateKey: VirgilPrivateKey,
+                         publicKeys: List<VirgilPublicKey>): DecryptedKeyknoxValue {
+
+        requires(publicKeys.isNotEmpty(), "privateKey")
+
 
         if ((encryptedKeyknoxValue.meta == null || encryptedKeyknoxValue.meta.isEmpty()) &&
                 (encryptedKeyknoxValue.value == null || encryptedKeyknoxValue.value.isEmpty())) {
 
-            return DecryptedKeyknoxValue(meta = ByteArray(0), value = ByteArray(0),
-                    version = encryptedKeyknoxValue.version, keyknoxHash = encryptedKeyknoxValue.keyknoxHash)
+            return DecryptedKeyknoxValue(meta = ByteArray(0),
+                                         value = ByteArray(0),
+                                         version = encryptedKeyknoxValue.version,
+                                         keyknoxHash = encryptedKeyknoxValue.keyknoxHash)
         }
 
-        verifyPrivateKey(privateKey)
-        verifyPublicKeys(publicKeys)
+        val meta = encryptedKeyknoxValue.meta
+        val value = encryptedKeyknoxValue.value
 
-        val virgilPrivateKey = privateKey as VirgilPrivateKey
-        VirgilSigner(Algorithm.SHA512).use({ signer ->
-            VirgilCipher().use({ cipher ->
+        requireNotNull(meta) { "'meta' should not be null" }
+        requireNotNull(value) { "'value' should not be null" }
 
-                cipher.contentInfo = encryptedKeyknoxValue.meta
-                val privateKeyData = this.crypto.exportPrivateKey(virgilPrivateKey)
+        val decryptedData = RecipientCipher().use { cipher ->
+            cipher.startDecryptionWithKey(privateKey.identifier,
+                                          privateKey.privateKey,
+                                          ByteArray(0))
 
-                val decryptedData = try {
-                    cipher.decryptWithKey(encryptedKeyknoxValue.value,
-                            virgilPrivateKey.identifier, privateKeyData)
-                } catch (e: Exception) {
-                    throw DecryptionFailedException()
-                }
+            val data = meta + value
 
-                val meta = cipher.contentInfo
-
-                val customParams = cipher.customParams()
-                val signedId = customParams.getData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID)
-                val signature = customParams.getData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE)
-
-                val publicKey = publicKeys.find {
-                    val id = (it as VirgilPublicKey).identifier
-                    if (signedId != null && id != null) {
-                        signedId.contentEquals(id)
-                    } else {
-                        false
-                    }
-                } as VirgilPublicKey?
-
-                publicKey ?: throw SignerNotFoundException("Signer's Public key not found")
-
-                val publicKeyData = this.crypto.exportPublicKey(publicKey)
-
-                try {
-                    signer.verify(decryptedData, signature, publicKeyData)
-                } catch (e: Exception) {
-                    throw SignatureVerificationException()
-                }
-
-                return DecryptedKeyknoxValue(meta, decryptedData!!, encryptedKeyknoxValue.version,
-                        encryptedKeyknoxValue.keyknoxHash)
-            })
-        })
-    }
-
-    @Throws(KeyknoxCryptoException::class)
-    private fun verifyPrivateKey(privateKey: PrivateKey) {
-        if (privateKey !is VirgilPrivateKey) {
-            throw KeyNotSupportedException()
-        }
-    }
-
-    @Throws(KeyknoxCryptoException::class)
-    private fun verifyPublicKeys(publicKeys: List<PublicKey>) {
-        if (publicKeys.isEmpty()) {
-            throw EmptyPublicKeysException("Public keys collection couldn't be empty")
-        }
-        for (key in publicKeys) {
-            if (key !is VirgilPublicKey) {
-                throw KeyNotSupportedException()
+            val decryptedData = try {
+                val process = cipher.processDecryption(data)
+                val finish = cipher.finishDecryption()
+                process + finish
+            } catch (throwable: Throwable) {
+                throw DecryptionFailedException()
             }
+
+            val signersPublicKey: VirgilPublicKey?
+
+            val signerId = try {
+                cipher.customParams().findData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID)
+            } catch (throwable: Throwable) {
+                throw SignerNotFoundException("Signer's Public key not found")
+            }
+
+            signersPublicKey = publicKeys.firstOrNull { Arrays.equals(it.identifier, signerId) }
+
+            if (signersPublicKey == null) throw SignerNotFoundException("Signer's Public key not found")
+
+            val signature = try {
+                cipher.customParams().findData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE)
+            } catch (throwable: Throwable) {
+                throw SignatureVerificationException()
+            }
+
+            val isValid = crypto.verifySignature(signature, decryptedData, signersPublicKey)
+
+            if (!isValid) throw SignatureVerificationException()
+
+            decryptedData
         }
+
+        return DecryptedKeyknoxValue(meta,
+                                     decryptedData,
+                                     encryptedKeyknoxValue.version,
+                                     encryptedKeyknoxValue.keyknoxHash)
     }
 }

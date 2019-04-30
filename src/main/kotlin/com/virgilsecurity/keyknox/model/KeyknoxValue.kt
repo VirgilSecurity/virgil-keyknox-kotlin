@@ -37,9 +37,6 @@ import java.util.*
 
 /**
  * Class represents value stored in Keyknox cloud.
- *
- * @author Andrii Iakovenko
- *
  */
 open class KeyknoxValue(val meta: ByteArray? = null, val value: ByteArray? = null, val version: String, val keyknoxHash: ByteArray? = null) {
 

@@ -34,10 +34,10 @@
 package com.virgilsecurity.keyknox.client
 
 import com.google.gson.JsonObject
+import com.virgilsecurity.keyknox.build.VersionVirgilAgent
 import com.virgilsecurity.keyknox.exception.KeyknoxServiceException
 import com.virgilsecurity.keyknox.utils.Loggable
 import com.virgilsecurity.keyknox.utils.Serializer
-import com.virgilsecurity.passw0rd.build.VersionVirgilAgent
 import com.virgilsecurity.sdk.common.ErrorResponse
 import com.virgilsecurity.sdk.utils.ConvertionUtils
 import com.virgilsecurity.sdk.utils.OsUtils

@@ -37,7 +37,6 @@ import com.virgilsecurity.sdk.utils.Base64
 import com.virgilsecurity.sdk.utils.ConvertionUtils
 import java.util.*
 import java.util.logging.Logger
-//import kotlin.reflect.full.companionObject
 
 inline fun base64Encode(array: ByteArray) = Base64.encode(array)
 
@@ -74,39 +73,3 @@ interface Loggable {
         return Logger.getLogger(unwrapCompanionClass(this.javaClass).name)
     }
 }
-
-///**
-// * Unwrap companion class to enclosing class given a Kotlin Class.
-// */
-//fun <T: Any> unwrapCompanionClass(ofClass: KClass<T>): KClass<*> {
-//    return unwrapCompanionClass(ofClass.java).kotlin
-//}
-//
-///**
-// * Return logger for Kotlin class.
-// */
-//fun <T: Any> logger(forClass: KClass<T>): Logger {
-//    return logger(forClass.java)
-//}
-//
-///**
-// * Return logger from extended class (or the enclosing class).
-// */
-//fun <T: Any> T.logger(): Logger {
-//    return logger(this.javaClass)
-//}
-//
-///**
-// * Return a lazy logger property delegate for enclosing class.
-// */
-//fun <R : Any> R.lazyLogger(): Lazy<Logger> {
-//    return lazy { logger(this.javaClass) }
-//}
-//
-///**
-// * Return a logger property delegate for enclosing class.
-// */
-//fun <R : Any> R.injectLogger(): Lazy<Logger> {
-//    return lazyOf(logger(this.javaClass))
-//}
-

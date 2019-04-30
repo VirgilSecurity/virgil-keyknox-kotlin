@@ -37,7 +37,6 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.virgilsecurity.keyknox.KeyknoxManager
 import com.virgilsecurity.keyknox.TestConfig
-import com.virgilsecurity.keyknox.TestUtils
 import com.virgilsecurity.keyknox.client.KeyknoxClient
 import com.virgilsecurity.keyknox.crypto.KeyknoxCrypto
 import com.virgilsecurity.keyknox.crypto.KeyknoxCryptoProtocol
@@ -78,7 +77,7 @@ class CloudKeyStorageTest {
         this.virgilCrypto = VirgilCrypto(false)
         this.keyknoxCrypto = KeyknoxCrypto()
 
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
         this.privateKey = keyPair.privateKey
         this.publicKey = keyPair.publicKey
         this.publicKeys = arrayListOf(this.publicKey)
@@ -105,7 +104,7 @@ class CloudKeyStorageTest {
     @Test
     fun store() {
         // KTC-20
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
         val privateKeyData = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
         val name = "test"
         val meta = mapOf("test_key" to "test_value")
@@ -129,7 +128,7 @@ class CloudKeyStorageTest {
     @Test
     fun store_twoTimes() {
         // KTC-20
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
         val privateKeyData = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
         val name = "test"
         val name2 = "test2"
@@ -163,7 +162,7 @@ class CloudKeyStorageTest {
     @Test
     fun exists() {
         // KTC-21
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
         val privateKeyData = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
         val name = "test"
 
@@ -194,8 +193,8 @@ class CloudKeyStorageTest {
         val preLast = numberOfKeys - 2
 
         // Generate 100 key entries
-        for (i in 0..(numberOfKeys - 1)) {
-            val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        for (i in 0 until numberOfKeys) {
+            val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
             privateKeys.add(keyPair.privateKey)
 
             if (i in second..preLast) {
@@ -230,7 +229,9 @@ class CloudKeyStorageTest {
             val entry = this.keyStorage.retrieve(name)
             assertNotNull(entry)
             val privateKey = this.virgilCrypto.importPrivateKey(entry.data)
-            assertArrayEquals(privateKeys[i].identifier, privateKey.identifier, "Entry $name has invalid identifier")
+            assertArrayEquals(privateKeys[i].identifier,
+                              privateKey.privateKey.identifier,
+                              "Entry $name has invalid identifier")
         }
 
         // Retrieve cloud entries
@@ -248,7 +249,7 @@ class CloudKeyStorageTest {
             val entry = this.keyStorage.retrieve(name)
             assertNotNull(entry)
             val privateKey = this.virgilCrypto.importPrivateKey(entry.data)
-            assertArrayEquals(privateKeys[i].identifier, privateKey.identifier)
+            assertArrayEquals(privateKeys[i].identifier, privateKey.privateKey.identifier)
         }
 
         // Store last key entry
@@ -267,7 +268,7 @@ class CloudKeyStorageTest {
             val entry = this.keyStorage.retrieve(name)
             assertNotNull(entry)
             val privateKey = this.virgilCrypto.importPrivateKey(entry.data)
-            assertArrayEquals(privateKeys[i].identifier, privateKey.identifier)
+            assertArrayEquals(privateKeys[i].identifier, privateKey.privateKey.identifier)
         }
 
         var lastEntry = this.keyStorage.retrieve("last")
@@ -290,7 +291,7 @@ class CloudKeyStorageTest {
             val entry = this.keyStorage.retrieve(name)
             assertNotNull(entry)
             val privateKey = this.virgilCrypto.importPrivateKey(entry.data)
-            assertArrayEquals(privateKeys[i].identifier, privateKey.identifier)
+            assertArrayEquals(privateKeys[i].identifier, privateKey.privateKey.identifier)
         }
 
         lastEntry = this.keyStorage.retrieve("last")
@@ -307,7 +308,7 @@ class CloudKeyStorageTest {
 
         // Generate 100 key entries
         for (i in 1..numberOfKeys) {
-            val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+            val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
             val name = "$i"
             val data = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
             val keyEntry = JsonKeyEntry(name, data)
@@ -361,7 +362,7 @@ class CloudKeyStorageTest {
 
         // Generate 100 key entries
         for (i in 1..numberOfKeys) {
-            val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+            val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
             val name = "$i"
             val data = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
             val keyEntry = JsonKeyEntry(name, data)
@@ -425,7 +426,7 @@ class CloudKeyStorageTest {
 
         // Generate 100 key entries
         for (i in 1..numberOfKeys) {
-            val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+            val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
             val name = "$i"
             val data = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
             val keyEntry = JsonKeyEntry(name, data)
@@ -469,7 +470,7 @@ class CloudKeyStorageTest {
 
         // Generate 100 key entries
         for (i in 1..numberOfKeys) {
-            val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+            val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
             val name = "$i"
             val data = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
             val keyEntry = JsonKeyEntry(name, data)
@@ -482,7 +483,7 @@ class CloudKeyStorageTest {
         // Store entries
         this.keyStorage.store(keyEntries)
 
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
 
         this.keyStorage.updateRecipients(arrayListOf(keyPair.publicKey), keyPair.privateKey)
         assertEquals(numberOfKeys, this.keyStorage.retrieveAll().size)
@@ -520,7 +521,7 @@ class CloudKeyStorageTest {
 
         // Generate 100 key entries
         for (i in 1..numberOfKeys) {
-            val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+            val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
             val name = "$i"
             val data = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
             val keyEntry = JsonKeyEntry(name, data)
@@ -573,13 +574,13 @@ class CloudKeyStorageTest {
     @Test
     fun deleteAll_randomString() {
         // KTC-41
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
         val privateKeyData = this.virgilCrypto.exportPrivateKey(keyPair.privateKey)
         val name = "test"
 
         this.keyStorage.retrieveCloudEntries()
         this.keyStorage.store(name = name, data = privateKeyData)
-        this.keyStorage.deleteAll();
+        this.keyStorage.deleteAll()
         assertTrue(this.keyStorage.retrieveAll().isEmpty())
     }
 
@@ -596,14 +597,14 @@ class CloudKeyStorageTest {
             map[entry.key] = entry.value.asString
         }
         entriesArray.add(CloudEntry(cloudJson.get("kName1").asString!!,
-                base64Decode(cloudJson.get("kData1").asString!!),
-                Date(cloudJson.get("kCreationDate1").asLong!!),
-                Date(cloudJson.get("kModificationDate1").asLong!!),
-                map))
+                                    base64Decode(cloudJson.get("kData1").asString!!),
+                                    Date(cloudJson.get("kCreationDate1").asLong),
+                                    Date(cloudJson.get("kModificationDate1").asLong),
+                                    map))
         entriesArray.add(CloudEntry(cloudJson.get("kName2").asString!!,
-                base64Decode(cloudJson.get("kData2").asString!!),
-                Date(cloudJson.get("kCreationDate2").asLong!!),
-                Date(cloudJson.get("kModificationDate2").asLong!!)))
+                                    base64Decode(cloudJson.get("kData2").asString!!),
+                                    Date(cloudJson.get("kCreationDate2").asLong),
+                                    Date(cloudJson.get("kModificationDate2").asLong)))
 
         val serializedEntries = cloudKeyStorage.serializeEntries(entriesArray)
         assertNotNull(serializedEntries)
@@ -637,16 +638,16 @@ class CloudKeyStorageTest {
         assertEquals(2, entries.size)
         assertEquals(cloudJson.get("kData1").asString, base64Encode(entries[0].data))
         assertEquals(cloudJson.get("kName1").asString, entries[0].name)
-        assertEquals(Date(cloudJson.get("kCreationDate1").asLong!!), entries[0].creationDate)
-        assertEquals(Date(cloudJson.get("kModificationDate1").asLong!!), entries[0].modificationDate)
+        assertEquals(Date(cloudJson.get("kCreationDate1").asLong), entries[0].creationDate)
+        assertEquals(Date(cloudJson.get("kModificationDate1").asLong), entries[0].modificationDate)
         assertNotNull(entries[0].meta)
         cloudJson.get("kMeta1").asJsonObject?.entrySet()?.forEach { entry ->
             assertEquals(entry.value.asString, entries[0].meta[entry.key])
         }
         assertEquals(cloudJson.get("kData2").asString, base64Encode(entries[1].data))
         assertEquals(cloudJson.get("kName2").asString, entries[1].name)
-        assertEquals(Date(cloudJson.get("kCreationDate2").asLong!!), entries[1].creationDate)
-        assertEquals(Date(cloudJson.get("kModificationDate2").asLong!!), entries[1].modificationDate)
+        assertEquals(Date(cloudJson.get("kCreationDate2").asLong), entries[1].creationDate)
+        assertEquals(Date(cloudJson.get("kModificationDate2").asLong), entries[1].modificationDate)
         assertNotNull(entries[1].meta)
     }
 

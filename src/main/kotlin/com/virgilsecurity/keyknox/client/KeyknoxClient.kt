@@ -45,8 +45,6 @@ import java.net.URL
 
 /**
  * KeyknoxClientProtocol implementation.
- *
- * @author Andrii Iakovenko
  */
 class KeyknoxClient @JvmOverloads constructor(
         val serviceUrl: URL = URL("https://api.virgilsecurity.com"),

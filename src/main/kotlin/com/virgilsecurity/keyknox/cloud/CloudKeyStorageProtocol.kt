@@ -34,8 +34,8 @@
 package com.virgilsecurity.keyknox.cloud
 
 import com.virgilsecurity.keyknox.model.CloudEntry
-import com.virgilsecurity.sdk.crypto.PrivateKey
-import com.virgilsecurity.sdk.crypto.PublicKey
+import com.virgilsecurity.sdk.crypto.VirgilPrivateKey
+import com.virgilsecurity.sdk.crypto.VirgilPublicKey
 import com.virgilsecurity.sdk.storage.KeyEntry
 
 interface CloudKeyStorageProtocol {
@@ -127,6 +127,7 @@ interface CloudKeyStorageProtocol {
      * @param newPublicKeys new public keys
      * @param newPrivateKey new private key
      */
-    fun updateRecipients(newPublicKeys: List<PublicKey>? = null, newPrivateKey: PrivateKey? = null)
+    fun updateRecipients(newPublicKeys: List<VirgilPublicKey>? = null,
+                         newPrivateKey: VirgilPrivateKey? = null)
 
 }

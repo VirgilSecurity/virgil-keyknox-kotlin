@@ -33,14 +33,12 @@
 
 package com.virgilsecurity.keyknox.crypto
 
-import com.virgilsecurity.keyknox.exception.EmptyPublicKeysException
 import com.virgilsecurity.keyknox.exception.SignerNotFoundException
 import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
-import com.virgilsecurity.sdk.crypto.PrivateKey
-import com.virgilsecurity.sdk.crypto.PublicKey
 import com.virgilsecurity.sdk.crypto.VirgilCrypto
+import com.virgilsecurity.sdk.crypto.VirgilPrivateKey
+import com.virgilsecurity.sdk.crypto.VirgilPublicKey
 import com.virgilsecurity.sdk.crypto.exceptions.CryptoException
-import com.virgilsecurity.sdk.crypto.exceptions.KeyNotSupportedException
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -54,9 +52,9 @@ import java.util.*
 class KeyknoxCryptoTest {
 
     private lateinit var crypto: KeyknoxCryptoProtocol
-    private lateinit var privateKey: PrivateKey
-    private lateinit var publicKey: PublicKey
-    private lateinit var publicKeys: MutableList<PublicKey>
+    private lateinit var privateKey: VirgilPrivateKey
+    private lateinit var publicKey: VirgilPublicKey
+    private lateinit var publicKeys: MutableList<VirgilPublicKey>
 
     @BeforeEach
     @Throws(CryptoException::class)
@@ -64,14 +62,14 @@ class KeyknoxCryptoTest {
         this.crypto = KeyknoxCrypto()
 
         val virgilCrypto = VirgilCrypto(false)
-        var keyPair = virgilCrypto.generateKeys()
+        var keyPair = virgilCrypto.generateKeyPair()
         this.privateKey = keyPair.privateKey
         this.publicKey = keyPair.publicKey
 
         val keysCount = 10
         this.publicKeys = ArrayList(keysCount)
         for (i in 0 until keysCount) {
-            keyPair = virgilCrypto.generateKeys()
+            keyPair = virgilCrypto.generateKeyPair()
             this.publicKeys.add(keyPair.publicKey)
         }
     }
@@ -79,29 +77,8 @@ class KeyknoxCryptoTest {
     @Test
     @Throws(CryptoException::class)
     fun encrypt_emptyPublicKeys() {
-        assertThrows<EmptyPublicKeysException> {
+        assertThrows<IllegalArgumentException> {
             this.crypto.encrypt(TEST_DATA, privateKey, ArrayList())
-        }
-    }
-
-    @Test
-    @Throws(CryptoException::class)
-    fun encrypt_wrongPublicKey() {
-        val keys = ArrayList(this.publicKeys)
-        keys.add(object : PublicKey {
-
-        })
-        assertThrows<KeyNotSupportedException> {
-            this.crypto.encrypt(TEST_DATA, privateKey, keys)
-        }
-    }
-
-    @Test
-    @Throws(CryptoException::class)
-    fun encrypt_wrongPrivateKey() {
-        val wronfPrivateKey = object : PrivateKey {}
-        assertThrows<KeyNotSupportedException> {
-            this.crypto.encrypt(TEST_DATA, wronfPrivateKey, publicKeys)
         }
     }
 
@@ -135,28 +112,9 @@ class KeyknoxCryptoTest {
 
     @Test
     @Throws(CryptoException::class)
-    fun decrypt_wrongPrivateKey() {
-        val wrongPrivateKey = object : PrivateKey {}
-        assertThrows<KeyNotSupportedException> {
-            this.crypto.decrypt(encryptTestData(), wrongPrivateKey, publicKeys)
-        }
-    }
-
-    @Test
-    @Throws(CryptoException::class)
     fun decrypt_emptyPublicKeys() {
-        assertThrows<EmptyPublicKeysException> {
+        assertThrows<IllegalArgumentException> {
             this.crypto.decrypt(encryptTestData(), privateKey, ArrayList())
-        }
-    }
-
-    @Test
-    @Throws(CryptoException::class)
-    fun decrypt_wrongPublicKeys() {
-        val keys = ArrayList(this.publicKeys)
-        keys.add(object : PublicKey {})
-        assertThrows<KeyNotSupportedException> {
-            this.crypto.decrypt(encryptTestData(), privateKey, keys)
         }
     }
 
