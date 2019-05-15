@@ -33,7 +33,7 @@
 
 buildscript {
     ext.versions = [
-            virgil_sdk: '5.1.0-SNAPSHOT',
+            virgil_sdk: '5.1.0',
             kotlin: '1.3.0-rc-190',
             junit: '5.2.0',
             dokka: '0.9.17'
@@ -56,7 +56,7 @@ plugins {
 }
 
 group 'com.virgilsecurity'
-version '0.2.0-alpha-SNAPSHOT'
+version '0.2.0'
 
 apply plugin: 'kotlin'
 apply plugin: 'org.junit.platform.gradle.plugin'
