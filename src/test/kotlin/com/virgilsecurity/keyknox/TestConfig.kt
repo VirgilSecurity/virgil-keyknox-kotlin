@@ -52,7 +52,7 @@ class TestConfig {
                 System.getProperty("API_PRIVATE_KEY")
             else
                 System.getenv("API_PRIVATE_KEY")).let {
-                this.virgilCrypto.importPrivateKey(base64Decode(it))
+                this.virgilCrypto.importPrivateKey(base64Decode(it)).privateKey
             }
         }
         val apiPublicKey: VirgilPublicKey by lazy {

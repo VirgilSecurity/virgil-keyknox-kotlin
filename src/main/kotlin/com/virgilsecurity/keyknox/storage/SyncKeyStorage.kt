@@ -38,6 +38,8 @@ import com.virgilsecurity.keyknox.cloud.CloudKeyStorageProtocol
 import com.virgilsecurity.keyknox.exception.*
 import com.virgilsecurity.sdk.crypto.PrivateKey
 import com.virgilsecurity.sdk.crypto.PublicKey
+import com.virgilsecurity.sdk.crypto.VirgilPrivateKey
+import com.virgilsecurity.sdk.crypto.VirgilPublicKey
 import com.virgilsecurity.sdk.jwt.contract.AccessTokenProvider
 import com.virgilsecurity.sdk.storage.DefaultKeyStorage
 import com.virgilsecurity.sdk.storage.KeyEntry
@@ -54,9 +56,9 @@ class SyncKeyStorage {
     private val keychainUtils = KeychainUtils()
 
     /**
-     * @param identity User's identity to separate keys in Keychain
-     * @param keyStorage KeychainStorageProtocol implementation
-     * @param cloudKeyStorage CloudKeyStorageProtocol implementation
+     * @param identity User's identity to separate keys in Keychain.
+     * @param keyStorage KeychainStorageProtocol implementation.
+     * @param cloudKeyStorage CloudKeyStorageProtocol implementation.
      */
     constructor(identity: String, keyStorage: KeyStorage,
                 cloudKeyStorage: CloudKeyStorageProtocol) {
@@ -66,8 +68,8 @@ class SyncKeyStorage {
     }
 
     /**
-     * @param identity User's identity to separate keys in Keychain
-     * @param cloudKeyStorage CloudKeyStorageProtocol implementation
+     * @param identity User's identity to separate keys in Keychain.
+     * @param cloudKeyStorage CloudKeyStorageProtocol implementation.
      */
     constructor(identity: String, cloudKeyStorage: CloudKeyStorageProtocol) {
         this.identity = identity
@@ -76,25 +78,28 @@ class SyncKeyStorage {
     }
 
     /**
-     * @param identity User's identity to separate keys in Keychain
-     * @param accessTokenProvider AccessTokenProvider implementation
-     * @param publicKeys Public keys used for encryption and signature verification
-     * @param privateKey Private key used for decryption and signature generation
+     * @param identity User's identity to separate keys in Keychain.
+     * @param accessTokenProvider AccessTokenProvider implementation.
+     * @param publicKeys Public keys used for encryption and signature verification.
+     * @param privateKey Private key used for decryption and signature generation.
      */
-    constructor(identity: String, accessTokenProvider: AccessTokenProvider,
-                publicKeys: List<PublicKey>, privateKey: PrivateKey) {
+    constructor(identity: String,
+                accessTokenProvider: AccessTokenProvider,
+                publicKeys: List<VirgilPublicKey>,
+                privateKey: VirgilPrivateKey) {
         this.identity = identity
         this.cloudKeyStorage = CloudKeyStorage(accessTokenProvider = accessTokenProvider,
-                publicKeys = publicKeys, privateKey = privateKey)
+                                               publicKeys = publicKeys,
+                                               privateKey = privateKey)
         this.keyStorage = KeyStorageWrapper(identity, DefaultKeyStorage())
     }
 
     /**
      * Updates entry in Keyknox Cloud and Keychain.
      *
-     * @param name entry name
-     * @param data new data
-     * @param meta new meta
+     * @param name Entry name.
+     * @param data New data.
+     * @param meta New meta.
      */
     fun update(name: String, data: ByteArray, meta: Map<String, String>? = null) {
         if (!this.keyStorage.exists(name)) {
@@ -113,9 +118,9 @@ class SyncKeyStorage {
     /**
      * Retrieves entry from Keychain.
      *
-     * @param name name
+     * @param name Name.
      *
-     * @return key entry
+     * @return Key entry.
      */
     fun retrieve(name: String): KeyEntry {
         return this.keyStorage.retrieve(name)
@@ -124,7 +129,7 @@ class SyncKeyStorage {
     /**
      * Deletes entries from both Keychain and Keyknox Cloud.
      *
-     * @param names names to delete
+     * @param names Names to delete.
      */
     fun delete(names: List<String>) {
         names.forEach { name ->
@@ -143,7 +148,7 @@ class SyncKeyStorage {
     /**
      * Deletes entry from both Keychain and Keyknox Cloud.
      *
-     * @param name name
+     * @param name Name.
      */
     fun delete(name: String) {
         this.delete(kotlin.collections.listOf(name))
@@ -152,11 +157,11 @@ class SyncKeyStorage {
     /**
      * Stores entry in both Keychain and Keyknox Cloud.
      *
-     * @param name name
-     * @param data data
-     * @param meta meta
+     * @param name Name.
+     * @param data Data.
+     * @param meta Meta.
      *
-     * @return key entry
+     * @return Key entry.
      */
     fun store(name: String, data: ByteArray, meta: Map<String, String>? = null): KeyEntry {
         val keyEntry = this.keyStorage.createEntry(name, data)
@@ -172,9 +177,9 @@ class SyncKeyStorage {
     /**
      * Stores entries in both Keychain and Keyknox Cloud.
      *
-     * @param keyEntries key entries to store
+     * @param keyEntries Key entries to store.
      *
-     * @return list of stored entries
+     * @return List of stored entries.
      */
     fun store(keyEntries: List<KeyEntry>): List<KeyEntry> {
         keyEntries.forEach { keyEntry ->
@@ -237,17 +242,17 @@ class SyncKeyStorage {
     /**
      * Updates recipients. See KeyknoxManager.updateRecipients.
      *
-     * @param newPublicKeys new public keys
-     * @param newPrivateKey new private key
+     * @param newPublicKeys New public keys.
+     * @param newPrivateKey New private key.
      */
-    fun updateRecipients(newPublicKeys: List<PublicKey>? = null, newPrivateKey: PrivateKey? = null) {
+    fun updateRecipients(newPublicKeys: List<VirgilPublicKey>? = null, newPrivateKey: VirgilPrivateKey? = null) {
         this.cloudKeyStorage.updateRecipients(newPublicKeys, newPrivateKey)
     }
 
     /**
      * Retrieves all entries from Keychain.
      *
-     * @return keychain entries
+     * @return Keychain entries.
      */
     fun retrieveAll(): List<KeyEntry> {
         return this.keyStorage.retrieveAll()
@@ -256,9 +261,9 @@ class SyncKeyStorage {
     /**
      * Checks if entry exists in Keychain.
      *
-     * @param name entry name
+     * @param name Entry name.
      *
-     * @return true if entry exists, false - otherwise
+     * @return True if entry exists, false - otherwise.
      */
     fun exists(name: String): Boolean {
         return this.keyStorage.exists(name)
@@ -306,5 +311,4 @@ class SyncKeyStorage {
             }
         }
     }
-
 }

@@ -38,8 +38,6 @@ import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
 
 /**
  * Interface for interactions with Keyknox service.
- *
- * @author Andrii Iakovenko
  */
 interface KeyknoxClientProtocol {
 

@@ -43,18 +43,19 @@ import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
 import com.virgilsecurity.keyknox.model.EncryptedKeyknoxValue
 import com.virgilsecurity.sdk.crypto.PrivateKey
 import com.virgilsecurity.sdk.crypto.PublicKey
+import com.virgilsecurity.sdk.crypto.VirgilPrivateKey
+import com.virgilsecurity.sdk.crypto.VirgilPublicKey
 import com.virgilsecurity.sdk.jwt.TokenContext
 import com.virgilsecurity.sdk.jwt.contract.AccessTokenProvider
 import java.util.*
 
 /**
  * Class responsible for interactions with Keyknox cloud + encrypting/decrypting those values.
- *
- * @author Andrii Iakovenko
  */
 class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
                      private val keyknoxClient: KeyknoxClientProtocol,
-                     var publicKeys: List<PublicKey>, var privateKey: PrivateKey,
+                     var publicKeys: List<VirgilPublicKey>,
+                     var privateKey: VirgilPrivateKey,
                      private val crypto: KeyknoxCryptoProtocol,
                      val retryOnUnauthorized: Boolean = false) {
 
@@ -66,8 +67,9 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
 
     /**
      * Signs then encrypts and pushed value to Keyknox service.
-     * @param value value to push.
-     * @param previousHash previous hash value.
+     *
+     * @param value Value to push.
+     * @param previousHash Previous hash value.
      */
     fun pushValue(value: ByteArray, previousHash: ByteArray?): DecryptedKeyknoxValue {
         val operation = { b: Boolean ->
@@ -96,7 +98,7 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
     }
 
     /**
-     * Resets Keyknox value (makes it empty). Also increments version
+     * Resets Keyknox value (makes it empty). Also increments version.
      */
     fun resetValue(): DecryptedKeyknoxValue {
         val operation = { b: Boolean ->
@@ -117,14 +119,15 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
     /**
      * Updates public keys for ecnryption and signature verification and private key for decryption and signature generation.
      *
-     * @param newPublicKeys new public keys that will be used for encryption and signature verification.
-     * @param newPrivateKey new private key that will be used for decryption and signature generation
+     * @param newPublicKeys New public keys that will be used for encryption and signature verification.
+     * @param newPrivateKey New private key that will be used for decryption and signature generation.
      *
-     * @return DecryptedKeyknoxValue
+     * @return DecryptedKeyknoxValue.
      */
     @JvmOverloads
-    fun updateRecipients(newPublicKeys: List<PublicKey>? = null,
-                         newPrivateKey: PrivateKey? = null): DecryptedKeyknoxValue {
+    fun updateRecipients(newPublicKeys: List<VirgilPublicKey>? = null,
+                         newPrivateKey: VirgilPrivateKey? = null): DecryptedKeyknoxValue {
+
         val tmpPublicKeys = newPublicKeys ?: this.publicKeys
         if (tmpPublicKeys.isEmpty()) {
             throw EmptyPublicKeysException()
@@ -139,8 +142,12 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
         val pulledValue = run(pullOperation)
         val decryptedValue = this.crypto.decrypt(pulledValue, this.privateKey, this.publicKeys)
 
-        if (decryptedValue.meta == null || decryptedValue.meta.isEmpty() || decryptedValue.value == null || decryptedValue.value.isEmpty()) {
-            // Empty data, no need to reencrypt anything
+        if (decryptedValue.meta == null
+                || decryptedValue.meta.isEmpty()
+                || decryptedValue.value == null
+                || decryptedValue.value.isEmpty()) {
+
+            // Empty data, no need to re-encrypt anything
             return decryptedValue
         }
 
@@ -151,7 +158,10 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
         val pushOperation = { b: Boolean ->
             val tokenContext = TokenContext("put", b, "keyknox")
             val token = this.accessTokenProvider.getToken(tokenContext)
-            val response = this.keyknoxClient.pushValue(encryptedValue.first, encryptedValue.second, pulledValue.keyknoxHash, token.stringRepresentation())
+            val response = this.keyknoxClient.pushValue(encryptedValue.first,
+                                                        encryptedValue.second,
+                                                        pulledValue.keyknoxHash,
+                                                        token.stringRepresentation())
             verifyServerResponse(encryptedValue, response)
             this.crypto.decrypt(response, this.privateKey, this.publicKeys)
         }
@@ -159,18 +169,22 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
     }
 
     /**
-     * Updates public keys for ecnryption and signature verification and private key for decryption and signature generation.
+     * Updates public keys for ecnryption and signature verification and private key for decryption
+     * and signature generation.
      *
-     * @param value current Keyknox value
-     * @param previousHash previous Keyknox value hash
-     * @param newPublicKeys new public keys that will be used for encryption and signature verification
-     * @param newPrivateKey new private key that will be used for decryption and signature generation
+     * @param value Current Keyknox value.
+     * @param previousHash Previous Keyknox value hash.
+     * @param newPublicKeys New public keys that will be used for encryption and signature verification.
+     * @param newPrivateKey New private key that will be used for decryption and signature generation.
      *
-     * @return DecryptedKeyknoxValue
+     * @return DecryptedKeyknoxValue.
      */
     @JvmOverloads
-    fun updateRecipients(value: ByteArray?, previousHash: ByteArray?,
-                         newPublicKeys: List<PublicKey>? = null, newPrivateKey: PrivateKey? = null): DecryptedKeyknoxValue {
+    fun updateRecipients(value: ByteArray?,
+                         previousHash: ByteArray?,
+                         newPublicKeys: List<VirgilPublicKey>? = null,
+                         newPrivateKey: VirgilPrivateKey? = null): DecryptedKeyknoxValue {
+
         val tmpPublicKeys = newPublicKeys ?: this.publicKeys
         if (tmpPublicKeys.isEmpty()) {
             throw EmptyPublicKeysException()
@@ -188,7 +202,11 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
         val operation = { b: Boolean ->
             val tokenContext = TokenContext("put", b, "keyknox")
             val token = this.accessTokenProvider.getToken(tokenContext)
-            val response = this.keyknoxClient.pushValue(encryptedValue.first, encryptedValue.second, previousHash, token.stringRepresentation())
+            val response = this.keyknoxClient.pushValue(encryptedValue.first,
+                                                        encryptedValue.second,
+                                                        previousHash,
+                                                        token.stringRepresentation())
+
             verifyServerResponse(encryptedValue, response)
             this.crypto.decrypt(response, this.privateKey, this.publicKeys)
         }
@@ -215,5 +233,4 @@ class KeyknoxManager(private val accessTokenProvider: AccessTokenProvider,
             }
         }
     }
-
 }

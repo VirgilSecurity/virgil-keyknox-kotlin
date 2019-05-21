@@ -33,9 +33,7 @@
 
 package com.virgilsecurity.keyknox.client
 
-import com.virgilsecurity.crypto.VirgilCipher
-import com.virgilsecurity.crypto.VirgilHash
-import com.virgilsecurity.crypto.VirgilSigner
+import com.virgilsecurity.crypto.foundation.*
 import com.virgilsecurity.keyknox.TestConfig
 import com.virgilsecurity.keyknox.utils.base64Encode
 import com.virgilsecurity.sdk.common.TimeSpan
@@ -59,7 +57,7 @@ class KeyknoxClientTest {
     @BeforeEach
     fun setup() {
         this.virgilCrypto = VirgilCrypto(false)
-        val keyPair = this.virgilCrypto.generateKeys(KeysType.FAST_EC_ED25519)
+        val keyPair = this.virgilCrypto.generateKeyPair(KeyType.ED25519)
         this.privateKey = keyPair.privateKey
         this.publicKey = keyPair.publicKey
         this.keyknoxClient = KeyknoxClient()
@@ -73,20 +71,30 @@ class KeyknoxClientTest {
     fun pushValue() {
         // KTC-1
         val data = base64Encode(UUID.randomUUID().toString())
-        val privateKeyData = this.virgilCrypto.exportPrivateKey(this.privateKey)
-        val publicKeyData = this.virgilCrypto.exportPublicKey(this.publicKey)
 
-        val signer = VirgilSigner(VirgilHash.Algorithm.SHA512)
-        val signature = signer.sign(data, privateKeyData)
+        val signHash = this.privateKey.privateKey as SignHash
+        val signer = Signer()
+        signer.setHash(Sha512())
 
-        val cipher = VirgilCipher()
-        val customData = cipher.customParams()
-        customData.setData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID, privateKey.identifier)
-        customData.setData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE, signature)
-        cipher.addKeyRecipient(publicKey.identifier, publicKeyData)
+        signer.reset()
+        signer.update(data)
 
-        val encryptedData = cipher.encrypt(data)
-        val meta = cipher.contentInfo
+        val signature = signer.sign(signHash)
+
+        val cipher = RecipientCipher()
+        cipher.setRandom(virgilCrypto.rng)
+        cipher.setEncryptionCipher(Aes256Gcm())
+
+        cipher.customParams().addData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID, privateKey.identifier)
+        cipher.customParams().addData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE, signature)
+
+        cipher.addKeyRecipient(publicKey.identifier, this.publicKey.publicKey)
+
+        cipher.startEncryption()
+
+        val meta = cipher.packMessageInfo()
+        var encryptedData = cipher.processEncryption(data)
+        encryptedData += cipher.finishEncryption()
 
         val pushedValue = this.keyknoxClient.pushValue(meta, encryptedData, null, this.tokenStr)
         assertArrayEquals(encryptedData, pushedValue.value)
@@ -108,34 +116,53 @@ class KeyknoxClientTest {
         // KTC-2
         val data = base64Encode(UUID.randomUUID().toString())
         val data2 = base64Encode(UUID.randomUUID().toString())
-        val privateKeyData = this.virgilCrypto.exportPrivateKey(this.privateKey)
-        val publicKeyData = this.virgilCrypto.exportPublicKey(this.publicKey)
 
-        val signer = VirgilSigner(VirgilHash.Algorithm.SHA512)
-        val signature = signer.sign(data, privateKeyData)
+        val signHash = this.privateKey.privateKey as SignHash
+        val signer = Signer()
+        signer.setHash(Sha512())
 
-        val cipher = VirgilCipher()
-        val customData = cipher.customParams()
-        customData.setData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID, privateKey.identifier)
-        customData.setData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE, signature)
-        cipher.addKeyRecipient(publicKey.identifier, publicKeyData)
+        signer.reset()
+        signer.update(data)
 
-        val encryptedData = cipher.encrypt(data)
-        val meta = cipher.contentInfo
+        val signature = signer.sign(signHash)
+
+        val cipher = RecipientCipher()
+        cipher.setRandom(virgilCrypto.rng)
+        cipher.setEncryptionCipher(Aes256Gcm())
+
+        cipher.customParams().addData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID, privateKey.identifier)
+        cipher.customParams().addData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE, signature)
+
+        cipher.addKeyRecipient(publicKey.identifier, this.publicKey.publicKey)
+
+        cipher.startEncryption()
+
+        val meta = cipher.packMessageInfo()
+        var encryptedData = cipher.processEncryption(data)
+        encryptedData += cipher.finishEncryption()
 
         val pushedValue = this.keyknoxClient.pushValue(meta, encryptedData, null, this.tokenStr)
         assertArrayEquals(encryptedData, pushedValue.value)
 
-        val signature2 = signer.sign(data2, privateKeyData)
+        signer.reset()
+        signer.update(data2)
 
-        val cipher2 = VirgilCipher()
-        val customData2 = cipher2.customParams()
-        customData2.setData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID, privateKey.identifier)
-        customData2.setData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE, signature2)
-        cipher2.addKeyRecipient(publicKey.identifier, publicKeyData)
+        val signature2 = signer.sign(signHash)
 
-        val encryptedData2 = cipher2.encrypt(data2)
-        val meta2 = cipher2.contentInfo
+        val cipher2 = RecipientCipher()
+        cipher2.setRandom(virgilCrypto.rng)
+        cipher2.setEncryptionCipher(Aes256Gcm())
+
+        cipher2.customParams().addData(VirgilCrypto.CUSTOM_PARAM_SIGNER_ID, privateKey.identifier)
+        cipher2.customParams().addData(VirgilCrypto.CUSTOM_PARAM_SIGNATURE, signature2)
+
+        cipher2.addKeyRecipient(publicKey.identifier, this.publicKey.publicKey)
+
+        cipher2.startEncryption()
+
+        val meta2 = cipher2.packMessageInfo()
+        var encryptedData2 = cipher2.processEncryption(data2)
+        encryptedData2 += cipher2.finishEncryption()
 
         val pushedValue2 = this.keyknoxClient.pushValue(meta2, encryptedData2, pushedValue.keyknoxHash, this.tokenStr)
         assertArrayEquals(encryptedData2, pushedValue2.value)

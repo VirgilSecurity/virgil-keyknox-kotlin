@@ -45,8 +45,8 @@ import com.virgilsecurity.keyknox.model.CloudEntries
 import com.virgilsecurity.keyknox.model.CloudEntry
 import com.virgilsecurity.keyknox.model.DecryptedKeyknoxValue
 import com.virgilsecurity.keyknox.utils.Serializer
-import com.virgilsecurity.sdk.crypto.PrivateKey
-import com.virgilsecurity.sdk.crypto.PublicKey
+import com.virgilsecurity.sdk.crypto.VirgilPrivateKey
+import com.virgilsecurity.sdk.crypto.VirgilPublicKey
 import com.virgilsecurity.sdk.jwt.contract.AccessTokenProvider
 import com.virgilsecurity.sdk.storage.JsonKeyEntry
 import com.virgilsecurity.sdk.storage.KeyEntry
@@ -56,8 +56,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Class responsible for storing keys in Keyknox cloud in a key/value storage manner.
- *
- * @author Andrii Iakovenko
  */
 open class CloudKeyStorage : CloudKeyStorageProtocol {
 
@@ -70,9 +68,12 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
     }
 
     constructor(accessTokenProvider: AccessTokenProvider,
-                publicKeys: List<PublicKey>, privateKey: PrivateKey) {
-        this.keyknoxManager = KeyknoxManager(accessTokenProvider = accessTokenProvider, crypto = KeyknoxCrypto(),
-                keyknoxClient = KeyknoxClient(), publicKeys = publicKeys, privateKey = privateKey)
+                publicKeys: List<VirgilPublicKey>, privateKey: VirgilPrivateKey) {
+        this.keyknoxManager = KeyknoxManager(accessTokenProvider = accessTokenProvider,
+                                             crypto = KeyknoxCrypto(),
+                                             keyknoxClient = KeyknoxClient(),
+                                             publicKeys = publicKeys,
+                                             privateKey = privateKey)
     }
 
     fun isStorageSynced(): Boolean {
@@ -209,7 +210,7 @@ open class CloudKeyStorage : CloudKeyStorageProtocol {
         }
     }
 
-    override fun updateRecipients(newPublicKeys: List<PublicKey>?, newPrivateKey: PrivateKey?) {
+    override fun updateRecipients(newPublicKeys: List<VirgilPublicKey>?, newPrivateKey: VirgilPrivateKey?) {
         synchronized(this.cache) {
             val decryptedKeyknoxData = this.decryptedKeyknoxData ?: throw CloudStorageOutOfSyncException()
 

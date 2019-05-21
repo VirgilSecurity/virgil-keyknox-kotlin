@@ -31,23 +31,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.virgilsecurity.keyknox.utils;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import com.virgilsecurity.passw0rd.build.VersionVirgilAgent;
-import org.junit.jupiter.api.Test;
+package com.virgilsecurity.keyknox.utils
 
 /**
- * VersionTestJava class.
+ * Validation class.
  */
-class VersionTestJava {
 
-  private static final String CURRENT_VERSION = "0.1.2";
-
-  @Test void version_test() {
-    String version = VersionVirgilAgent.VERSION;
-
-    assertEquals(CURRENT_VERSION, version);
-  }
+/**
+ * This function intention is just to make code a little bit more elegant/concise.
+ *
+ * @throws IllegalArgumentException
+ */
+@Throws(IllegalArgumentException::class)
+fun requires(value: Boolean, argumentName: String) {
+    require(value) { "Parameter '$argumentName' should not be empty" }
 }
