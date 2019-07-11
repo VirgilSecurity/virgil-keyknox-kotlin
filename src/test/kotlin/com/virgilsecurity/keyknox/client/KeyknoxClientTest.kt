@@ -72,14 +72,13 @@ class KeyknoxClientTest {
         // KTC-1
         val data = base64Encode(UUID.randomUUID().toString())
 
-        val signHash = this.privateKey.privateKey as SignHash
         val signer = Signer()
         signer.setHash(Sha512())
 
         signer.reset()
-        signer.update(data)
+        signer.appendData(data)
 
-        val signature = signer.sign(signHash)
+        val signature = signer.sign(this.privateKey.privateKey)
 
         val cipher = RecipientCipher()
         cipher.setRandom(virgilCrypto.rng)
@@ -117,14 +116,13 @@ class KeyknoxClientTest {
         val data = base64Encode(UUID.randomUUID().toString())
         val data2 = base64Encode(UUID.randomUUID().toString())
 
-        val signHash = this.privateKey.privateKey as SignHash
         val signer = Signer()
         signer.setHash(Sha512())
 
         signer.reset()
-        signer.update(data)
+        signer.appendData(data)
 
-        val signature = signer.sign(signHash)
+        val signature = signer.sign(this.privateKey.privateKey)
 
         val cipher = RecipientCipher()
         cipher.setRandom(virgilCrypto.rng)
@@ -145,9 +143,9 @@ class KeyknoxClientTest {
         assertArrayEquals(encryptedData, pushedValue.value)
 
         signer.reset()
-        signer.update(data2)
+        signer.appendData(data2)
 
-        val signature2 = signer.sign(signHash)
+        val signature2 = signer.sign(this.privateKey.privateKey)
 
         val cipher2 = RecipientCipher()
         cipher2.setRandom(virgilCrypto.rng)
