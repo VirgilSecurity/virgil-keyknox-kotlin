@@ -528,7 +528,7 @@ class SyncKeyStorageTests {
         var syncKeyStorage2 = SyncKeyStorage(identity = this.identity, keyStorage = keyStorage, cloudKeyStorage = CloudKeyStorage(keyknoxManager))
 
         val name = UUID.randomUUID().toString()
-        val data = publicKey2.publicKey.exportPublicKey()
+        val data = virgilCrypto.exportPublicKey(publicKey2)
 
         syncKeyStorage.sync()
         syncKeyStorage.store(name, data)

@@ -33,19 +33,29 @@
 
 buildscript {
     ext.versions = [
-            virgil_sdk: '5.1.0',
-            kotlin: '1.3.0-rc-190',
-            junit: '5.2.0',
-            dokka: '0.9.17'
+            // Kotlin
+            kotlin   : '1.3.41',
+
+            // Virgil
+            virgilSdk: '5.1.2',
+
+            // Gson
+            gson     : '2.8.5',
+
+            // Docs
+            dokka    : '0.9.18',
+
+            // Tests
+            junit    : '5.5.0',
     ]
 
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
-        classpath "org.jetbrains.dokka:dokka-gradle-plugin:${versions.dokka}"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:$versions.dokka"
     }
 }
 
@@ -74,16 +84,19 @@ repositories {
 }
 
 dependencies {
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versions.kotlin"
+
     // Virgil
-    implementation "com.virgilsecurity.sdk:crypto:$versions.virgil_sdk"
-    implementation "com.virgilsecurity.sdk:sdk:$versions.virgil_sdk"
+    implementation "com.virgilsecurity.sdk:crypto:$versions.virgilSdk"
+    implementation "com.virgilsecurity.sdk:sdk:$versions.virgilSdk"
 
-    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.5'
+    // Gson
+    implementation "com.google.code.gson:gson:$versions.gson"
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}"
-
-    testImplementation "org.junit.jupiter:junit-jupiter-api:${versions.junit}"
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
+    // Tests
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
 }
 
 task generateVersionVirgilAgent {
@@ -113,16 +126,8 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-def APP_ID = hasProperty('APP_ID') ? APP_ID : System.getenv('APP_ID')
-def API_PRIVATE_KEY = hasProperty('API_PRIVATE_KEY') ? API_PRIVATE_KEY : System.getenv('API_PRIVATE_KEY')
-def API_PUBLIC_KEY = hasProperty('API_PUBLIC_KEY') ? API_PUBLIC_KEY : System.getenv('API_PUBLIC_KEY')
-def API_PUBLIC_KEY_ID = hasProperty('API_PUBLIC_KEY_ID') ? API_PUBLIC_KEY_ID : System.getenv('API_PUBLIC_KEY_ID')
-
-junitPlatformTest {
-    systemProperty 'APP_ID', APP_ID
-    systemProperty 'API_PRIVATE_KEY', API_PRIVATE_KEY
-    systemProperty 'API_PUBLIC_KEY', API_PUBLIC_KEY
-    systemProperty 'API_PUBLIC_KEY_ID', API_PUBLIC_KEY_ID
+afterEvaluate {
+    tasks.getByName('junitPlatformTest').systemProperties project.gradle.startParameter.systemPropertiesArgs
 }
 
 task sourcesJar(type: Jar) {
